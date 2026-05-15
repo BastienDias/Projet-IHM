@@ -20,14 +20,14 @@ public class FenetrePrincipale extends JFrame{
         this.setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        this.init_composants();
-        init_actions();
+        initComposants();
+        initActions();
         
         this.setResizable(false);
         this.pack();
     }
     
-    private void init_composants(){
+    private void initComposants(){
         JPanel panneauLabel = new JPanel();
         panneauLabel.setLayout(new BorderLayout(5, 5));
         lblBienvenue = new JLabel("Bienvenue sur le menu principale de Medic'In.");
@@ -50,7 +50,7 @@ public class FenetrePrincipale extends JFrame{
         this.setContentPane(panneauGlobal);
     }
     
-    private void init_actions() {
+    private void initActions() {
 
         /**
          * Listener associé au bouton "Générer un graphe aléatoire".
