@@ -3,10 +3,13 @@ package saeihm;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import org.graphstream.graph.Graph;
 
 public class FenetrePrincipale extends JFrame{
     JButton btGenerer, btCharger;
@@ -16,7 +19,10 @@ public class FenetrePrincipale extends JFrame{
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
         this.init_composants();
+        init_actions();
+        
         this.setResizable(false);
         this.pack();
     }
@@ -42,5 +48,33 @@ public class FenetrePrincipale extends JFrame{
         panneauGlobal.add(panneauLabel, BorderLayout.NORTH);
         panneauGlobal.add(panneauBouton, BorderLayout.CENTER);
         this.setContentPane(panneauGlobal);
+    }
+    
+    private void init_actions() {
+
+        /**
+         * Listener associé au bouton "Générer un graphe aléatoire".
+         * Génère un graphe de 10 sommets via GenGraphe et l'affiche dans GraphStream.
+         */
+        btGenerer.addActionListener(e -> {
+            Graph carte = GenGraphe.construireGrapheAleatoire(10);
+            carte.display();
+        });
+
+        /**
+         * Listener associé au bouton "Charger un graphe".
+         * Ouvre une boîte de dialogue de sélection de fichier filtrée sur les .csv,
+         * puis charge et affiche le graphe correspondant via GenGraphe.chargerGraphe().
+         */
+        btCharger.addActionListener(e -> {
+            JFileChooser selecteur = new JFileChooser();
+            selecteur.setFileFilter(new FileNameExtensionFilter("Fichiers CSV (*.csv)", "csv"));
+            int resultat = selecteur.showOpenDialog(this);
+            if (resultat == JFileChooser.APPROVE_OPTION) {
+                String chemin = selecteur.getSelectedFile().getAbsolutePath();
+                Graph grapheCharge = GenGraphe.chargerGraphe(chemin);
+                grapheCharge.display();
+            }
+        });
     }
 }
