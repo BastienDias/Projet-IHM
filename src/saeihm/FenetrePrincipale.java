@@ -110,7 +110,7 @@ public class FenetrePrincipale extends JFrame {
      */
     private void initActions() {
         btGenerer.addActionListener(e -> {
-            Graph carte = GenGraphe.construireGrapheAleatoire(10);
+            Graph carte = GenGraphe.construireGrapheAleatoire(this.demanderNbSommets());
             afficherGraphe(carte);
         });
 
@@ -223,6 +223,31 @@ public class FenetrePrincipale extends JFrame {
                 cbDistance.isSelected(),
                 cbDuree.isSelected(),
                 cbLabelsSommets.isSelected());
+    }
+    
+    private int demanderNbSommets() {
+        String saisie = JOptionPane.showInputDialog(this,
+                "Choisir le nombre de centres de la carte\n",
+                "Générer le graphe",
+                JOptionPane.QUESTION_MESSAGE);
+        
+        int nbSommets = Integer.parseInt(saisie.trim());;
+        try {
+            nbSommets = Integer.parseInt(saisie.trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Valeur invalide : merci de saisir un nombre entier.",
+                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+        }
+
+        if (nbSommets < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Le seuil doit etre superieur à 0.",
+                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+        }
+        return  nbSommets;
+        //grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
+        //lblStatut.setText("Graphe chargé: " + nbSommets + " sommet" + grapheCourant.getEdgeCount()+"routes");
     }
 }
 
