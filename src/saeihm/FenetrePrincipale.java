@@ -143,6 +143,8 @@ public class FenetrePrincipale extends JFrame {
      * @param graphe Graphe a afficher (non null)
      */
     private void afficherGraphe(Graph graphe) {
+        if(graphe == null) 
+            return;
         this.grapheCourant = graphe;
 
         if (viewerCourant != null) {
@@ -229,20 +231,23 @@ public class FenetrePrincipale extends JFrame {
                 "Choisir le nombre de centres de la carte\n",
                 "Générer le graphe",
                 JOptionPane.QUESTION_MESSAGE);
-        
-        int nbSommets = Integer.parseInt(saisie.trim());
+        if(saisie == null)
+            return null;
+        int nbSommets = 0;
         try {
             nbSommets = Integer.parseInt(saisie.trim());
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this,
                     "Valeur invalide : merci de saisir un nombre entier.",
                     "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            return null;
         }
 
         if (nbSommets < 0) {
             JOptionPane.showMessageDialog(this,
                     "Le nombre de sommets doit etre superieur à 0.",
                     "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            return null;
         }
         grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
         lblStatut.setText("Graphe chargé: " + nbSommets + " sommet" + grapheCourant.getEdgeCount()+"routes");

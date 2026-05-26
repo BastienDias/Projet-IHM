@@ -6,9 +6,11 @@ import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 
 /**
@@ -309,5 +311,51 @@ public class GenGraphe {
             }
             e.setAttribute("ui.label", label);
         }
+    }
+    
+    public static Path plusCourtChemin(Graph graphe, String idDebut, String idFin){
+        Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "duree");
+        dijkstra.init(graphe);
+        dijkstra.setSource(graphe.getNode(idDebut));
+        dijkstra.compute();
+        Path chemin = dijkstra.getPath(graphe.getNode(idFin)); 
+        return chemin;       
+    }
+    
+    public static Path cheminPlusSur(Graph graphe, String idDebut, String idFin){
+        List<Edge> aretesPasFiable = new ArrayList<>();
+        double fiabilite;
+        double duree;
+        for (Edge e : graphe.getEachEdge()) {
+            fiabilite = (double) e.getAttribute("fiabilite");
+            if(fiabilite < 0.25){
+                aretesPasFiable.add(e);
+            }
+        }
+        
+        for (Edge e : aretesPasFiable) {
+            graphe.removeEdge(e);   
+        }
+        
+        for (Edge e : graphe.getEachEdge()) {
+            duree = (double) e.getAttribute("duree");
+            fiabilite = (double) e.getAttribute("fiabilite");
+            double dureeEstimee = duree*(20-fiabilite)/10;
+            e.setAttribute("dureeEstimee", dureeEstimee);
+        }
+        Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "dureeEstimee");
+        dijkstra.init(graphe);
+        dijkstra.setSource(graphe.getNode(idDebut));
+        dijkstra.compute();
+        Path chemin = dijkstra.getPath(graphe.getNode(idFin)); 
+        
+       for (Edge e : aretesPasFiable) {
+            Edge nouvelleArete = graphe.addEdge(e.getId(), e.getNode0().getId(), e.getNode1().getId());
+            nouvelleArete.setAttribute("fiabilite", e.getAttribute("fiabilite"));
+            nouvelleArete.setAttribute("distance", e.getAttribute("distance"));
+            nouvelleArete.setAttribute("duree", e.getAttribute("duree"));
+            nouvelleArete.setAttribute("ui.label", e.getAttribute("ui.label"));
+        }   
+        return chemin;
     }
 }
