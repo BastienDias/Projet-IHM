@@ -110,8 +110,7 @@ public class FenetrePrincipale extends JFrame {
      */
     private void initActions() {
         btGenerer.addActionListener(e -> {
-            Graph carte = GenGraphe.construireGrapheAleatoire(this.demanderNbSommets());
-            afficherGraphe(carte);
+            afficherGraphe(this.demanderNbSommets());
         });
 
         btCharger.addActionListener(e -> {
@@ -225,13 +224,13 @@ public class FenetrePrincipale extends JFrame {
                 cbLabelsSommets.isSelected());
     }
     
-    private int demanderNbSommets() {
+    private Graph demanderNbSommets() {
         String saisie = JOptionPane.showInputDialog(this,
                 "Choisir le nombre de centres de la carte\n",
                 "Générer le graphe",
                 JOptionPane.QUESTION_MESSAGE);
         
-        int nbSommets = Integer.parseInt(saisie.trim());;
+        int nbSommets = Integer.parseInt(saisie.trim());
         try {
             nbSommets = Integer.parseInt(saisie.trim());
         } catch (NumberFormatException ex) {
@@ -242,12 +241,12 @@ public class FenetrePrincipale extends JFrame {
 
         if (nbSommets < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Le seuil doit etre superieur à 0.",
+                    "Le nombre de sommets doit etre superieur à 0.",
                     "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
         }
-        return  nbSommets;
-        //grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
-        //lblStatut.setText("Graphe chargé: " + nbSommets + " sommet" + grapheCourant.getEdgeCount()+"routes");
+        grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
+        lblStatut.setText("Graphe chargé: " + nbSommets + " sommet" + grapheCourant.getEdgeCount()+"routes");
+        return  grapheCourant;
     }
 }
 

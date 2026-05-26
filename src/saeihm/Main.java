@@ -1,6 +1,7 @@
 package saeihm;
 
-//import org.graphstream.graph.Graph;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
 
 public class Main {
 
@@ -8,6 +9,7 @@ public class Main {
         //Graph carte = GenGraphe.construireGrapheAleatoire(10);
         //carte.display();
         FenetrePrincipale fen1 = new FenetrePrincipale();
+        
     }
     
 }
