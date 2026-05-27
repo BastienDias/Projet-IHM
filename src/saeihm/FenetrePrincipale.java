@@ -1,11 +1,18 @@
 package saeihm;
 //test
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.*;
+
 import org.graphstream.graph.Graph;
+import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.swingViewer.ViewPanel;
 import org.graphstream.ui.view.Viewer;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.Path;
 
 /**
  * Fenetre principale de l'application Medic'In.
@@ -15,9 +22,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class FenetrePrincipale extends JFrame {
 
-    private JButton btGenerer, btCharger, btRoutesRisquees;
+    private JButton btGenerer, btCharger, btRoutesRisquees, btCalculerItineraire;
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
+    private JComboBox<String> cbDepart, cbArrivee;
+    private JTextArea zoneResultat;
     private JPanel panneauGraphe;
     private JPanel panneauStats;
 
@@ -26,6 +35,9 @@ public class FenetrePrincipale extends JFrame {
 
     /** Viewer GraphStream actif. Conserve pour pouvoir le fermer avant d'en ouvrir un autre. */
     private Viewer viewerCourant;
+
+    /** Vue active, conservee pour detecter les clics sur les noeuds. */
+    private ViewPanel vueCourante;
 
     /**
      * Construit et affiche la fenetre principale.
@@ -110,10 +122,35 @@ public class FenetrePrincipale extends JFrame {
         contraintesAff.gridy = 3;
         panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
-        // Empilement vertical : Statistiques au-dessus, Affichage en-dessous
-        JPanel panneauDroite = new JPanel(new BorderLayout(5, 5));
-        panneauDroite.add(panneauStats,     BorderLayout.NORTH);
-        panneauDroite.add(panneauAffichage, BorderLayout.CENTER);
+        // Panneau Itineraire : selection depart/arrivee + bouton + resultats
+        JPanel panneauItineraire = new JPanel(new BorderLayout(3, 3));
+        panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire (Q4)"));
+
+        JPanel panneauSel = new JPanel(new GridLayout(2, 2, 3, 3));
+        cbDepart  = new JComboBox<>();
+        cbArrivee = new JComboBox<>();
+        panneauSel.add(new JLabel("Depart :"));
+        panneauSel.add(cbDepart);
+        panneauSel.add(new JLabel("Arrivee :"));
+        panneauSel.add(cbArrivee);
+
+        btCalculerItineraire = new JButton("Calculer les chemins");
+        btCalculerItineraire.setEnabled(false);
+
+        zoneResultat = new JTextArea(5, 16);
+        zoneResultat.setEditable(false);
+        zoneResultat.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+
+        panneauItineraire.add(panneauSel,                      BorderLayout.NORTH);
+        panneauItineraire.add(btCalculerItineraire,            BorderLayout.CENTER);
+        panneauItineraire.add(new JScrollPane(zoneResultat),   BorderLayout.SOUTH);
+
+        // Empilement vertical : Statistiques, Affichage, Itineraire
+        JPanel panneauDroite = new JPanel();
+        panneauDroite.setLayout(new BoxLayout(panneauDroite, BoxLayout.Y_AXIS));
+        panneauDroite.add(panneauStats);
+        panneauDroite.add(panneauAffichage);
+        panneauDroite.add(panneauItineraire);
 
         lblStatut = new JLabel(" ");
         lblStatut.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
@@ -146,6 +183,7 @@ public class FenetrePrincipale extends JFrame {
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
+        btCalculerItineraire.addActionListener(e -> calculerEtAfficherItineraires());
 
         java.awt.event.ActionListener majAffichage = e -> appliquerPreferencesAffichage();
         cbFiabilite.addActionListener(majAffichage);
@@ -174,6 +212,22 @@ public class FenetrePrincipale extends JFrame {
         viewerCourant = new Viewer(graphe, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         viewerCourant.enableAutoLayout();
         ViewPanel vue = viewerCourant.addDefaultView(false);
+        vueCourante = vue;
+
+        vue.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                GraphicElement elem = vueCourante.findNodeOrSpriteAt(e.getX(), e.getY());
+                if (elem != null) {
+                    String nodeId = elem.getId();
+                    if (e.getButton() == MouseEvent.BUTTON3) {
+                        ouvrirInfosCentre(nodeId);
+                    } else {
+                        lblStatut.setText("Centre selectionne : " + nodeId);
+                    }
+                }
+            }
+        });
 
         panneauGraphe.removeAll();
         panneauGraphe.add((Component) vue, BorderLayout.CENTER);
@@ -182,6 +236,7 @@ public class FenetrePrincipale extends JFrame {
 
         majCompteurs();
         appliquerPreferencesAffichage();
+        populerCombos();
         btRoutesRisquees.setEnabled(true);
         lblStatut.setText("Graphe charge : " + graphe.getNodeCount() + " sommets, " + graphe.getEdgeCount() + " routes.");
     }
@@ -190,13 +245,14 @@ public class FenetrePrincipale extends JFrame {
      * Met a jour les trois labels de compteurs en interrogeant GenGraphe.
      */
     private void majCompteurs() {
-        if (grapheCourant == null) return;
-        int nbM = GenGraphe.compterSommetsParType(grapheCourant, "maternite");
-        int nbO = GenGraphe.compterSommetsParType(grapheCourant, "bloc");
-        int nbN = GenGraphe.compterSommetsParType(grapheCourant, "centre");
-        lblNbMaternite.setText("Maternites (M) : " + nbM);
-        lblNbBloc.setText("Blocs operatoires (O) : " + nbO);
-        lblNbCentre.setText("Centres de nutrition (N) : " + nbN);
+        if (grapheCourant != null) {
+            int nbM = GenGraphe.compterSommetsParType(grapheCourant, "maternite");
+            int nbO = GenGraphe.compterSommetsParType(grapheCourant, "bloc");
+            int nbN = GenGraphe.compterSommetsParType(grapheCourant, "centre");
+            lblNbMaternite.setText("Maternites (M) : " + nbM);
+            lblNbBloc.setText("Blocs operatoires (O) : " + nbO);
+            lblNbCentre.setText("Centres de nutrition (N) : " + nbN);
+        }
     }
 
     /**
@@ -236,12 +292,13 @@ public class FenetrePrincipale extends JFrame {
      * Lue chaque fois qu'une case a cocher du panneau Affichage est modifiee.
      */
     private void appliquerPreferencesAffichage() {
-        if (grapheCourant == null) return;
-        GenGraphe.majAffichage(grapheCourant,
-                cbFiabilite.isSelected(),
-                cbDistance.isSelected(),
-                cbDuree.isSelected(),
-                cbLabelsSommets.isSelected());
+        if (grapheCourant != null) {
+            GenGraphe.majAffichage(grapheCourant,
+                    cbFiabilite.isSelected(),
+                    cbDistance.isSelected(),
+                    cbDuree.isSelected(),
+                    cbLabelsSommets.isSelected());
+        }
     }
 
     /**
@@ -271,5 +328,132 @@ public class FenetrePrincipale extends JFrame {
         grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
         lblStatut.setText("Graphe charge : " + nbSommets + " sommets, " + grapheCourant.getEdgeCount() + " routes.");
         return grapheCourant;
+    }
+
+    /**
+     * Remplit les combo boxes depart/arrivee avec les ids de tous les sommets du graphe courant.
+     * Active le bouton de calcul une fois rempli.
+     */
+    private void populerCombos() {
+        cbDepart.removeAllItems();
+        cbArrivee.removeAllItems();
+        for (Node n : grapheCourant) {
+            cbDepart.addItem(n.getId());
+            cbArrivee.addItem(n.getId());
+        }
+        btCalculerItineraire.setEnabled(true);
+        zoneResultat.setText("");
+    }
+
+    /**
+     * Retire le surlignage (ui.style) de toutes les aretes du graphe courant.
+     * Appele avant chaque nouveau calcul d'itineraire.
+     */
+    private void reinitialiserSurlignageChemin() {
+        if (grapheCourant != null) {
+            for (Edge e : grapheCourant.getEachEdge()) {
+                e.removeAttribute("ui.style");
+                e.setAttribute("ui.style", "size: 1px;");
+            }
+        }
+    }
+
+    /**
+     * Convertit un Path GraphStream en chaine lisible "S1 -> S3 -> S5".
+     * @param chemin Path a convertir (non null)
+     * @return Chaine representant la sequence de sommets
+     */
+    private String cheminToString(Path chemin) {
+        String sb = "";
+        for (Node n : chemin.getNodePath()) {
+            if (!sb.equals("")) {
+           
+                sb = sb + " -> ";
+            }
+            sb= sb + n.getId();
+        }
+        return sb;
+    }
+
+    /**
+     * Lance les deux calculs Dijkstra (duree minimale + chemin sur) entre les centres
+     * selectionnes dans les combo boxes, surligne les chemins sur le graphe et
+     * affiche les resultats dans zoneResultat.
+     * Chemin 1 (duree min) surligne en orange, chemin 2 (sur) en violet.
+     */
+    private void calculerEtAfficherItineraires() {
+        if (grapheCourant != null) {
+            String idDepart  = (String) cbDepart.getSelectedItem();
+            String idArrivee = (String) cbArrivee.getSelectedItem();
+
+            if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
+                JOptionPane.showMessageDialog(this,
+                        "Veuillez selectionner deux centres differents.",
+                        "Saisie invalide", JOptionPane.WARNING_MESSAGE);
+            } else {
+                // Calculer les deux chemins
+                Path chemin1 = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
+                Path chemin2 = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
+                String resultat = "";
+
+                // Remettre a zero PUIS colorier
+                reinitialiserSurlignageChemin();
+
+                if (chemin2 != null && !chemin2.empty()) {
+                    for (Edge e : chemin2.getEdgeSet()) {
+                        e.setAttribute("ui.style", "fill-color: rgb(148,0,211); size: 4px;");
+                    }
+                }
+
+                if (chemin1 != null && !chemin1.empty()) {
+                    for (Edge e : chemin1.getEdgeSet()) {
+                        e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
+                    }
+                }
+
+                // Texte : chemin1 en premier
+                if (chemin1 == null || chemin1.empty()) {
+                    resultat = resultat + "=== Chemin court (duree) ===\nAucun chemin\n\n";
+                } else {
+                    double totalDuree = 0;
+                    for (Edge e : chemin1.getEdgeSet()) {
+                        totalDuree += (double) e.getAttribute("duree");
+                    }
+                    resultat = resultat + "=== Chemin court (duree) ===\n";
+                    resultat = resultat + cheminToString(chemin1) + "\n";
+                    resultat = resultat + "Duree totale : " + String.format("%.0f", totalDuree) + " min\n\n";
+                }
+
+                if (chemin2 == null || chemin2.empty()) {
+                    resultat = resultat + "=== Chemin sur ===\nAucun chemin (routes peu fiables bloquees)";
+                } else {
+                    double totalEstimee = 0;
+                    for (Edge e : chemin2.getEdgeSet()) {
+                        double duree     = (double) e.getAttribute("duree");
+                        double fiabilite = (double) e.getAttribute("fiabilite");
+                        totalEstimee += duree * (20 - fiabilite * 10) / 10.0;
+                    }
+                    resultat = resultat + "=== Chemin sur ===\n";
+                    resultat = resultat + cheminToString(chemin2) + "\n";
+                    resultat = resultat + "Duree estimee : " + String.format("%.0f", totalEstimee) + " min";
+                }
+
+                zoneResultat.setText(resultat);
+                lblStatut.setText("Itineraire calcule : " + idDepart + " -> " + idArrivee);
+            }
+        }
+    }
+
+    /**
+     * Ouvre une boite de dialogue avec les informations du centre clique (clic droit).
+     * A completer pour la Q5 : distances, plus proches centres par type, etc.
+     * @param nodeId Identifiant du sommet clique (ex: "S1")
+     */
+    private void ouvrirInfosCentre(String nodeId) {
+        String type = (String) grapheCourant.getNode(nodeId).getAttribute("type");
+        JOptionPane.showMessageDialog(this,
+                "Centre : " + nodeId + "\nType : " + type,
+                "Informations sur le centre",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }
