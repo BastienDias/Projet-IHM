@@ -13,7 +13,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * directement dans la fenetre via GraphStream, et de consulter les statistiques
  * du graphe (compteurs par type de centre, routes risquees au-dela d'un seuil).
  */
-
 public class FenetrePrincipale extends JFrame {
 
     private JButton btGenerer, btCharger, btRoutesRisquees;
@@ -49,8 +48,11 @@ public class FenetrePrincipale extends JFrame {
      * Initialise la disposition des composants.
      * En haut : bandeau d'actions (generer / charger / routes risquees).
      * Au centre : panneau qui accueillera la vue GraphStream.
-     * A droite : panneau d'informations affichant les compteurs M/O/N.
+     * A droite : panneau d'informations affichant les compteurs M/O/N
+     * et le panneau de preferences d'affichage.
      * En bas : barre de statut.
+     * Les panneaux Statistiques et Affichage utilisent GridBagLayout pour
+     * empiler verticalement leurs composants en les alignant a gauche.
      */
     private void initComposants() {
         JPanel panneauActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -67,27 +69,46 @@ public class FenetrePrincipale extends JFrame {
         JLabel lblVide = new JLabel("Aucun graphe charge.", SwingConstants.CENTER);
         panneauGraphe.add(lblVide, BorderLayout.CENTER);
 
-        panneauStats = new JPanel(new GridLayout(0, 1, 5, 5));
+        panneauStats = new JPanel(new GridBagLayout());
         panneauStats.setBorder(BorderFactory.createTitledBorder("Statistiques"));
+        GridBagConstraints contraintesStats = new GridBagConstraints();
+        contraintesStats.gridx = 0;
+        contraintesStats.anchor = GridBagConstraints.WEST;
+        contraintesStats.insets = new Insets(2, 5, 2, 5);
+
         lblNbMaternite = new JLabel("Maternites (M) : -");
         lblNbBloc      = new JLabel("Blocs operatoires (O) : -");
         lblNbCentre    = new JLabel("Centres de nutrition (N) : -");
-        panneauStats.add(lblNbMaternite);
-        panneauStats.add(lblNbBloc);
-        panneauStats.add(lblNbCentre);
+
+        contraintesStats.gridy = 0;
+        panneauStats.add(lblNbMaternite, contraintesStats);
+        contraintesStats.gridy = 1;
+        panneauStats.add(lblNbBloc, contraintesStats);
+        contraintesStats.gridy = 2;
+        panneauStats.add(lblNbCentre, contraintesStats);
 
         // Panneau Affichage : controle ce qui apparait sur les aretes et sommets.
         // Par defaut : seuls les labels de sommets sont visibles (plus lisible).
-        JPanel panneauAffichage = new JPanel(new GridLayout(0, 1, 5, 5));
+        JPanel panneauAffichage = new JPanel(new GridBagLayout());
         panneauAffichage.setBorder(BorderFactory.createTitledBorder("Affichage"));
+        GridBagConstraints contraintesAff = new GridBagConstraints();
+        contraintesAff.gridx = 0;
+        contraintesAff.anchor = GridBagConstraints.WEST;
+        contraintesAff.insets = new Insets(2, 5, 2, 5);
+
         cbFiabilite      = new JCheckBox("Fiabilite sur les routes",     false);
         cbDistance       = new JCheckBox("Distance sur les routes",      false);
         cbDuree          = new JCheckBox("Duree sur les routes",         false);
         cbLabelsSommets  = new JCheckBox("Identifiants des sommets",     true);
-        panneauAffichage.add(cbFiabilite);
-        panneauAffichage.add(cbDistance);
-        panneauAffichage.add(cbDuree);
-        panneauAffichage.add(cbLabelsSommets);
+
+        contraintesAff.gridy = 0;
+        panneauAffichage.add(cbFiabilite, contraintesAff);
+        contraintesAff.gridy = 1;
+        panneauAffichage.add(cbDistance, contraintesAff);
+        contraintesAff.gridy = 2;
+        panneauAffichage.add(cbDuree, contraintesAff);
+        contraintesAff.gridy = 3;
+        panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
         // Empilement vertical : Statistiques au-dessus, Affichage en-dessous
         JPanel panneauDroite = new JPanel(new BorderLayout(5, 5));
@@ -106,7 +127,7 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Branche les ecouteurs d'evenements sur les boutons.
+     * Branche les ecouteurs d'evenements sur les boutons et cases a cocher.
      */
     private void initActions() {
         btGenerer.addActionListener(e -> {
@@ -125,13 +146,12 @@ public class FenetrePrincipale extends JFrame {
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
-        
+
         java.awt.event.ActionListener majAffichage = e -> appliquerPreferencesAffichage();
         cbFiabilite.addActionListener(majAffichage);
         cbDistance.addActionListener(majAffichage);
         cbDuree.addActionListener(majAffichage);
         cbLabelsSommets.addActionListener(majAffichage);
-
     }
 
     /**
@@ -140,11 +160,10 @@ public class FenetrePrincipale extends JFrame {
      * addDefaultView(false) qui empeche GraphStream d'ouvrir sa propre JFrame.
      * Si un viewer etait deja actif, il est ferme proprement avant d'en creer un nouveau
      * pour eviter une fuite de threads.
-     * @param graphe Graphe a afficher (non null)
+     * @param graphe Graphe a afficher. Si null, la methode sort immediatement.
      */
     private void afficherGraphe(Graph graphe) {
-        if(graphe == null) 
-            return;
+        if (graphe == null) return;
         this.grapheCourant = graphe;
 
         if (viewerCourant != null) {
@@ -164,8 +183,7 @@ public class FenetrePrincipale extends JFrame {
         majCompteurs();
         appliquerPreferencesAffichage();
         btRoutesRisquees.setEnabled(true);
-        lblStatut.setText("Graphe charge : " + graphe.getNodeCount() + " sommets, "
-                + graphe.getEdgeCount() + " routes.");
+        lblStatut.setText("Graphe charge : " + graphe.getNodeCount() + " sommets, " + graphe.getEdgeCount() + " routes.");
     }
 
     /**
@@ -200,23 +218,23 @@ public class FenetrePrincipale extends JFrame {
         try {
             seuil = Double.parseDouble(saisie.trim().replace(',', '.'));
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Valeur invalide : merci de saisir un nombre decimal.",
-                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Valeur invalide : merci de saisir un nombre decimal.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (seuil <= 0 || seuil > 1) {
-            JOptionPane.showMessageDialog(this,
-                    "Le seuil doit etre dans l'intervalle ]0 ; 1].",
-                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Le seuil doit etre dans l'intervalle ]0 ; 1].", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         int nbRisquees = GenGraphe.marquerRoutesRisquees(grapheCourant, seuil);
-        lblStatut.setText("Routes risquees (fiabilite < " + seuil + ") : "
-                + nbRisquees + " sur " + grapheCourant.getEdgeCount());
+        lblStatut.setText("Routes risquees (fiabilite < " + seuil + ") : " + nbRisquees + " sur " + grapheCourant.getEdgeCount());
     }
+
+    /**
+     * Repropage les preferences d'affichage cochees vers le graphe courant.
+     * Lue chaque fois qu'une case a cocher du panneau Affichage est modifiee.
+     */
     private void appliquerPreferencesAffichage() {
         if (grapheCourant == null) return;
         GenGraphe.majAffichage(grapheCourant,
@@ -225,34 +243,33 @@ public class FenetrePrincipale extends JFrame {
                 cbDuree.isSelected(),
                 cbLabelsSommets.isSelected());
     }
-    
+
+    /**
+     * Affiche une boite de dialogue demandant le nombre de sommets puis construit
+     * un graphe aleatoire de cette taille via GenGraphe.
+     * @return Le graphe genere, ou null si l'utilisateur annule ou saisit une valeur invalide
+     */
     private Graph demanderNbSommets() {
         String saisie = JOptionPane.showInputDialog(this,
                 "Choisir le nombre de centres de la carte\n",
                 "Générer le graphe",
                 JOptionPane.QUESTION_MESSAGE);
-        if(saisie == null)
-            return null;
-        int nbSommets = 0;
+        if (saisie == null) return null;
+
+        int nbSommets;
         try {
             nbSommets = Integer.parseInt(saisie.trim());
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Valeur invalide : merci de saisir un nombre entier.",
-                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Valeur invalide : merci de saisir un nombre entier.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
         if (nbSommets < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Le nombre de sommets doit etre superieur à 0.",
-                    "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Le nombre de sommets doit etre superieur a 0.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             return null;
         }
         grapheCourant = GenGraphe.construireGrapheAleatoire(nbSommets);
-        lblStatut.setText("Graphe chargé: " + nbSommets + " sommet" + grapheCourant.getEdgeCount()+"routes");
-        return  grapheCourant;
+        lblStatut.setText("Graphe charge : " + nbSommets + " sommets, " + grapheCourant.getEdgeCount() + " routes.");
+        return grapheCourant;
     }
 }
-
-

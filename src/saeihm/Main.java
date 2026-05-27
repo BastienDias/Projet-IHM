@@ -8,6 +8,7 @@ import org.graphstream.graph.Path;
 public class Main {
 
     public static void main(String[] args) {
+        FenetrePrincipale fp = new FenetrePrincipale();
         //Graph carte = GenGraphe.chargerGraphe("./graphes/graphe1.csv");
         //carte.display();
         //Path chemin = GenGraphe.plusCourtChemin(carte, "S1", "S6");
