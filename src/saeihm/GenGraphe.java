@@ -32,7 +32,7 @@ public class GenGraphe {
             "node.bloc { fill-color: blue; size: 20px; } " +
             "node.centre { fill-color: green; size: 20px; } " +
             "edge.risquee { fill-color: red; size: 3px; } " +
-            "edge { size: 1px; }";
+            "edge { fill-color: black; size: 1px; } " ;
 
     /**
      * Constructeur prive : classe utilitaire non instanciable.
@@ -323,39 +323,21 @@ public class GenGraphe {
     }
     
     public static Path cheminPlusSur(Graph graphe, String idDebut, String idFin){
-        List<Edge> aretesPasFiable = new ArrayList<>();
-        double fiabilite;
-        double duree;
         for (Edge e : graphe.getEachEdge()) {
-            fiabilite = (double) e.getAttribute("fiabilite");
-            if(fiabilite < 0.25){
-                aretesPasFiable.add(e);
+            double fiabilite = (double) e.getAttribute("fiabilite");
+            double duree     = (double) e.getAttribute("duree");
+            double dureeEstimee;
+            if (fiabilite < 0.25) {
+                dureeEstimee = Double.MAX_VALUE / 2; // route bloquee, Dijkstra l'evite
+            } else {
+                dureeEstimee = duree * (20 - fiabilite * 10) / 10; // fiabilite stockee en 0.0-1.0, formule attend x10
             }
-        }
-        
-        for (Edge e : aretesPasFiable) {
-            graphe.removeEdge(e);   
-        }
-        
-        for (Edge e : graphe.getEachEdge()) {
-            duree = (double) e.getAttribute("duree");
-            fiabilite = (double) e.getAttribute("fiabilite");
-            double dureeEstimee = duree*(20-fiabilite)/10;
             e.setAttribute("dureeEstimee", dureeEstimee);
         }
         Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "dureeEstimee");
         dijkstra.init(graphe);
         dijkstra.setSource(graphe.getNode(idDebut));
         dijkstra.compute();
-        Path chemin = dijkstra.getPath(graphe.getNode(idFin)); 
-        
-       for (Edge e : aretesPasFiable) {
-            Edge nouvelleArete = graphe.addEdge(e.getId(), e.getNode0().getId(), e.getNode1().getId());
-            nouvelleArete.setAttribute("fiabilite", e.getAttribute("fiabilite"));
-            nouvelleArete.setAttribute("distance", e.getAttribute("distance"));
-            nouvelleArete.setAttribute("duree", e.getAttribute("duree"));
-            nouvelleArete.setAttribute("ui.label", e.getAttribute("ui.label"));
-        }   
-        return chemin;
+        return dijkstra.getPath(graphe.getNode(idFin));
     }
 }
