@@ -20,7 +20,7 @@ public class Main {
         //-> System.out.println("  → " + e.getId()
         // + " | Durée : " + String.format("%.0f", (double) e.getAttribute("duree")) + " min")
         //);
-        Graph graphe = GenGraphe.construireGrapheAleatoire(6);
+        /*Graph graphe = GenGraphe.construireGrapheAleatoire(6);
 
         String idDebut = graphe.getNode(0).getId();
         String idFin = graphe.getNode(graphe.getNodeCount() - 1).getId();
@@ -48,7 +48,7 @@ public class Main {
             }
 
             System.out.println(sb.toString() + " : durée estimée : " + String.format("%.0f", dureeEstimee) + " min");
-        }
+        }*/
         //FenetrePrincipale fen1 = new FenetrePrincipale();
 
     }
