@@ -25,7 +25,7 @@ public class FenetrePrincipale extends JFrame {
     private JButton btGenerer, btCharger, btRoutesRisquees, btCalculerItineraire;
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
-    private JComboBox<String> cbDepart, cbArrivee;
+    private JComboBox<String> cbDepart, cbArrivee ;
     private JTextArea zoneResultat;
     private JPanel panneauGraphe;
     private JPanel panneauStats;
@@ -123,44 +123,149 @@ public class FenetrePrincipale extends JFrame {
         panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
         // Panneau Itineraire : selection depart/arrivee + bouton + resultats
-        JPanel panneauItineraire = new JPanel(new BorderLayout(3, 3));
-        panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire (Q4)"));
+        JPanel panneauItineraire = new JPanel(new GridBagLayout());
+        panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire"));
+        GridBagConstraints gciti = new GridBagConstraints() ;
+        
+        
+        JPanel panneauSel = new JPanel(new GridBagLayout());
+        GridBagConstraints gcSel = new GridBagConstraints();
+        gcSel.insets = new Insets(2, 4, 2, 4);
 
-        JPanel panneauSel = new JPanel(new GridLayout(2, 2, 3, 3));
         cbDepart  = new JComboBox<>();
         cbArrivee = new JComboBox<>();
-        panneauSel.add(new JLabel("Depart :"));
-        panneauSel.add(cbDepart);
-        panneauSel.add(new JLabel("Arrivee :"));
-        panneauSel.add(cbArrivee);
+
+
+        gcSel.gridx = 0;
+        gcSel.weightx = 0;
+        gcSel.fill = GridBagConstraints.NONE;
+        gcSel.anchor = GridBagConstraints.LINE_END;
+        gcSel.gridy = 0;
+        panneauSel.add(new JLabel("Depart :"), gcSel);
+        gcSel.gridy = 1;
+        panneauSel.add(new JLabel("Arrivee :"), gcSel);
+
+
+        gcSel.gridx = 1;
+        gcSel.weightx = 1;
+        gcSel.fill = GridBagConstraints.HORIZONTAL;
+        gcSel.anchor = GridBagConstraints.LINE_START;
+        gcSel.gridy = 0;
+        panneauSel.add(cbDepart, gcSel);
+        gcSel.gridy = 1;
+        panneauSel.add(cbArrivee, gcSel);
 
         btCalculerItineraire = new JButton("Calculer les chemins");
         btCalculerItineraire.setEnabled(false);
 
-        zoneResultat = new JTextArea(5, 16);
-        zoneResultat.setEditable(false);
-        zoneResultat.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+        zoneResultat = new JTextArea(3,1);
+        
+        // Ligne 0 : panneauSel (combos depart/arrivee)
+        gciti.gridx = 0;
+        gciti.gridy = 0;
+        gciti.fill = GridBagConstraints.HORIZONTAL;
+        gciti.weightx = 1.0;
+        gciti.weighty = 0;
+        gciti.insets = new Insets(2, 2, 2, 2);
+        panneauItineraire.add(panneauSel, gciti);
 
-        panneauItineraire.add(panneauSel,                      BorderLayout.NORTH);
-        panneauItineraire.add(btCalculerItineraire,            BorderLayout.CENTER);
-        panneauItineraire.add(new JScrollPane(zoneResultat),   BorderLayout.SOUTH);
+        // Ligne 1 : bouton centre, taille naturelle
+        gciti.gridy = 1;
+        gciti.gridx = 0 ;
+        gciti.fill = GridBagConstraints.BOTH;
+        gciti.anchor = GridBagConstraints.CENTER;
+        gciti.weightx = 0;
+        panneauItineraire.add(btCalculerItineraire, gciti);
+
+        // Ligne 2 : zone resultats qui prend l'espace restant
+        gciti.gridy = 2;
+        gciti.fill = GridBagConstraints.BOTH;
+        gciti.weightx = 1.0;
+        gciti.weighty = 1.0;
+        panneauItineraire.add(new JScrollPane(zoneResultat), gciti);
 
         // Empilement vertical : Statistiques, Affichage, Itineraire
-        JPanel panneauDroite = new JPanel();
-        panneauDroite.setLayout(new BoxLayout(panneauDroite, BoxLayout.Y_AXIS));
-        panneauDroite.add(panneauStats);
-        panneauDroite.add(panneauAffichage);
-        panneauDroite.add(panneauItineraire);
+        JPanel panneauDroite = new JPanel(new GridBagLayout());
+        GridBagConstraints gbcDroite = new GridBagConstraints();
+        gbcDroite.gridx = 0;
+        gbcDroite.fill = GridBagConstraints.HORIZONTAL;
+        gbcDroite.weightx = 1.0;
+        gbcDroite.insets = new Insets(2, 2, 2, 2);
+
+        gbcDroite.gridy = 0;
+        panneauDroite.add(panneauStats, gbcDroite);
+        gbcDroite.gridy = 1;
+        panneauDroite.add(panneauAffichage, gbcDroite);
+        gbcDroite.gridy = 2;
+        gbcDroite.weighty = 1.0;
+        gbcDroite.fill = GridBagConstraints.BOTH;
+        panneauDroite.add(panneauItineraire, gbcDroite);
+        
+        
+        // Question 6 IHM
+        
+        JPanel panneauTournee = new JPanel(new GridBagLayout()) ;
+        panneauTournee.setBorder(BorderFactory.createTitledBorder("Tournée de véhicule"));
+        GridBagConstraints gct = new GridBagConstraints() ;
+        gct.insets = new Insets(5, 2, 5, 2);
+        gct.fill = GridBagConstraints.NONE ;
+        
+        
+        
+        JComboBox cbCamion = new JComboBox() ;
+        cbCamion.addItem("Camion 1") ;
+        cbCamion.addItem("Camion 2") ;
+        
+        gct.anchor = GridBagConstraints.LINE_START ;
+        gct.gridx = 0 ;
+        gct.gridy = 0 ;
+        JLabel jCamion = new JLabel("Choix camion :") ;
+        panneauTournee.add(jCamion,gct) ;
+        
+        gct.anchor = GridBagConstraints.CENTER ;
+        gct.gridx = 1 ;
+        gct.gridy = 0 ;
+        panneauTournee.add(cbCamion, gct) ;
+        
+        gct.anchor = GridBagConstraints.LINE_START ;
+        gct.gridx = 0 ;
+        gct.gridy = 1 ;
+        JLabel jCentres = new JLabel("Type centres :") ;
+        panneauTournee.add(jCentres,gct) ;
+        
+        gct.anchor = GridBagConstraints.CENTER ;
+        gct.gridx = 1 ;
+        gct.gridy = 1 ;
+        JComboBox cbCentres = new JComboBox() ;
+        cbCentres.addItem("Tous");
+        cbCentres.addItem("Centres M");
+        cbCentres.addItem("Centres O");
+        cbCentres.addItem("Centres N");
+        panneauTournee.add(cbCentres, gct) ;
+        
+        gct.fill = GridBagConstraints.BOTH ;
+        gct.gridx = 0 ;
+        gct.gridwidth = 2 ;
+        gct.gridy = 2 ;
+        JButton btCalculerTournee = new JButton("Calculer Tournée");
+        btCalculerTournee.setEnabled(false);
+        panneauTournee.add(btCalculerTournee, gct) ;
+        
+        gbcDroite.gridy = 3 ;
+        panneauDroite.add(panneauTournee, gbcDroite) ;
+        
 
         lblStatut = new JLabel(" ");
-        lblStatut.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
 
-        JPanel contenu = new JPanel(new BorderLayout(5, 5));
+        JPanel contenu = new JPanel(new BorderLayout());
         contenu.add(panneauActions, BorderLayout.NORTH);
         contenu.add(panneauGraphe,  BorderLayout.CENTER);
         contenu.add(panneauDroite,  BorderLayout.EAST);
         contenu.add(lblStatut,      BorderLayout.SOUTH);
         this.setContentPane(contenu);
+        
+        
+ 
     }
 
     /**
@@ -352,8 +457,7 @@ public class FenetrePrincipale extends JFrame {
     private void reinitialiserSurlignageChemin() {
         if (grapheCourant != null) {
             for (Edge e : grapheCourant.getEachEdge()) {
-                e.removeAttribute("ui.style");
-                e.setAttribute("ui.style", "size: 1px;");
+                e.setAttribute("ui.style", "fill-color: black; size: 1px;");
             }
         }
     }
