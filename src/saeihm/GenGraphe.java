@@ -340,4 +340,24 @@ public class GenGraphe {
         dijkstra.compute();
         return dijkstra.getPath(graphe.getNode(idFin));
     }
+    
+    public static ArrayList<String> filtrageSommet(Graph g, String typerechecher){
+        
+        ArrayList<String> idpt = new ArrayList<>() ;
+        if (g != null) {
+            if (typerechecher != null) {
+                for(Node n :g.getEachNode()){
+
+                    if(!n.getId().equals("S1")){
+
+                        if(typerechecher.equals(n.getAttribute("type")) || typerechecher.equals("Tous")){
+                            idpt.add(n.getId()) ;
+                        }
+                    }
+                }
+            }
+        }
+        return idpt ;
+    }
+    
 }
