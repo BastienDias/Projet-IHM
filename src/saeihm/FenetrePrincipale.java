@@ -13,6 +13,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
+import org.graphstream.ui.geom.Point3;
 
 /**
  * Fenetre principale de l'application Medic'In.
@@ -47,6 +48,8 @@ public class FenetrePrincipale extends JFrame {
     public FenetrePrincipale() {
         super("Medic'In");
 
+System.setProperty("org.graphstream.ui.renderer", 
+    "org.graphstream.ui.j2dviewer.J2DGraphRenderer");        
         initComposants();
         initActions();
 
@@ -319,16 +322,50 @@ public class FenetrePrincipale extends JFrame {
         ViewPanel vue = viewerCourant.addDefaultView(false);
         vueCourante = vue;
 
-        vue.addMouseListener(new MouseAdapter() {
+vue.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                GraphicElement elem = vueCourante.findNodeOrSpriteAt(e.getX(), e.getY());
-                if (elem != null) {
-                    String nodeId = elem.getId();
-                    if (e.getButton() == MouseEvent.BUTTON3) {
-                        ouvrirInfosCentre(nodeId);
+            public void mousePressed(MouseEvent e) {
+                int xPix = e.getX() - 5;
+                int yPix = e.getY();
+
+                // Essai direct
+                GraphicElement element = vueCourante.findNodeOrSpriteAt(xPix, yPix);
+                Node noeud = null;
+
+                if (element != null) {
+                    noeud = grapheCourant.getNode(element.getId());
+                } else {
+                    // Fallback : convertit chaque sommet en pixels via la camera
+                    // et cherche le plus proche du clic (tolerance 30 pixels).
+                    // On lit les positions dans le GraphicGraph du viewer, pas
+                    // dans le graphe, car l'autoLayout n'ecrit pas xyz dedans.
+                    org.graphstream.ui.view.Camera camera = vueCourante.getCamera();
+                    org.graphstream.ui.graphicGraph.GraphicGraph gg = viewerCourant.getGraphicGraph();
+                    double meilleureDist = 30;
+                    for (Node n : grapheCourant) {
+                        org.graphstream.ui.graphicGraph.GraphicNode gn =
+                                (org.graphstream.ui.graphicGraph.GraphicNode) gg.getNode(n.getId());
+                        if (gn == null) continue;
+                        Point3 pixel = camera.transformGuToPx(gn.getX(), gn.getY(), 0);
+                        double dx = pixel.x - xPix;
+                        double dy = pixel.y - yPix;
+                        double d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < meilleureDist) {
+                            meilleureDist = d;
+                            noeud = n;
+                        }
+                    }
+                }
+
+                if (noeud != null) {
+                    for (Node autre : grapheCourant) {
+                        autre.removeAttribute("ui.clicked");
+                    }
+                    noeud.setAttribute("ui.clicked");
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        ouvrirInfosCentre(noeud.getId());
                     } else {
-                        lblStatut.setText("Centre selectionne : " + nodeId);
+                        lblStatut.setText("Centre selectionne : " + noeud.getId());
                     }
                 }
             }
@@ -554,10 +591,8 @@ public class FenetrePrincipale extends JFrame {
      * @param nodeId Identifiant du sommet clique (ex: "S1")
      */
     private void ouvrirInfosCentre(String nodeId) {
-        String type = (String) grapheCourant.getNode(nodeId).getAttribute("type");
-        JOptionPane.showMessageDialog(this,
-                "Centre : " + nodeId + "\nType : " + type,
-                "Informations sur le centre",
-                JOptionPane.INFORMATION_MESSAGE);
-    }
+        if (grapheCourant == null) return;
+        if (grapheCourant.getNode(nodeId) == null) return;
+        new FenetreInfosCentre(this, grapheCourant, nodeId);
+    }    
 }
