@@ -22,11 +22,10 @@ import org.graphstream.graph.Path;
  */
 public class FenetrePrincipale extends JFrame {
 
-    private JButton btGenerer, btCharger, btRoutesRisquees, btCalculerItineraire;
+    private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt;
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
     private JComboBox<String> cbDepart, cbArrivee ;
-    private JTextArea zoneResultat;
     private JPanel panneauGraphe;
     private JPanel panneauStats;
 
@@ -155,10 +154,14 @@ public class FenetrePrincipale extends JFrame {
         gcSel.gridy = 1;
         panneauSel.add(cbArrivee, gcSel);
 
-        btCalculerItineraire = new JButton("Calculer les chemins");
-        btCalculerItineraire.setEnabled(false);
-
-        zoneResultat = new JTextArea(3,1);
+        
+        btCheminLePlusSur = new JButton("Calculer le chemin le plus sûr") ;
+        btCheminLePlusSur.setEnabled(false);
+        
+        btCheminLePlusCourt = new JButton("Calculer le chemin le plus court") ;
+        btCheminLePlusCourt.setEnabled(false);
+        
+        
         
         // Ligne 0 : panneauSel (combos depart/arrivee)
         gciti.gridx = 0;
@@ -175,14 +178,12 @@ public class FenetrePrincipale extends JFrame {
         gciti.fill = GridBagConstraints.BOTH;
         gciti.anchor = GridBagConstraints.CENTER;
         gciti.weightx = 0;
-        panneauItineraire.add(btCalculerItineraire, gciti);
+        panneauItineraire.add(btCheminLePlusCourt, gciti);
 
         // Ligne 2 : zone resultats qui prend l'espace restant
         gciti.gridy = 2;
         gciti.fill = GridBagConstraints.BOTH;
-        gciti.weightx = 1.0;
-        gciti.weighty = 1.0;
-        panneauItineraire.add(new JScrollPane(zoneResultat), gciti);
+        panneauItineraire.add(btCheminLePlusSur, gciti);
 
         // Empilement vertical : Statistiques, Affichage, Itineraire
         JPanel panneauDroite = new JPanel(new GridBagLayout());
@@ -288,8 +289,10 @@ public class FenetrePrincipale extends JFrame {
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
-        btCalculerItineraire.addActionListener(e -> calculerEtAfficherItineraires());
-
+        
+        btCheminLePlusCourt.addActionListener(e -> calculerEtAfficherCheminPlusCourt());
+        btCheminLePlusSur.addActionListener(e -> calculerEtAfficherCheminPlusSur());
+        
         java.awt.event.ActionListener majAffichage = e -> appliquerPreferencesAffichage();
         cbFiabilite.addActionListener(majAffichage);
         cbDistance.addActionListener(majAffichage);
@@ -446,8 +449,10 @@ public class FenetrePrincipale extends JFrame {
             cbDepart.addItem(n.getId());
             cbArrivee.addItem(n.getId());
         }
-        btCalculerItineraire.setEnabled(true);
-        zoneResultat.setText("");
+        
+        btCheminLePlusCourt.setEnabled(true);
+        btCheminLePlusSur.setEnabled(true);
+        
     }
 
     /**
@@ -482,10 +487,9 @@ public class FenetrePrincipale extends JFrame {
     /**
      * Lance les deux calculs Dijkstra (duree minimale + chemin sur) entre les centres
      * selectionnes dans les combo boxes, surligne les chemins sur le graphe et
-     * affiche les resultats dans zoneResultat.
      * Chemin 1 (duree min) surligne en orange, chemin 2 (sur) en violet.
      */
-    private void calculerEtAfficherItineraires() {
+    private void calculerEtAfficherCheminPlusCourt() {
         if (grapheCourant != null) {
             String idDepart  = (String) cbDepart.getSelectedItem();
             String idArrivee = (String) cbArrivee.getSelectedItem();
@@ -497,6 +501,53 @@ public class FenetrePrincipale extends JFrame {
             } else {
                 // Calculer les deux chemins
                 Path chemin1 = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
+                
+                String resultat = "";
+
+                // Remettre a zero PUIS colorier
+                reinitialiserSurlignageChemin();
+
+                
+
+                if (chemin1 != null && !chemin1.empty()) {
+                    for (Edge e : chemin1.getEdgeSet()) {
+                        e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
+                    }
+                }
+
+                // Texte : chemin1 en premier
+                if (chemin1 == null || chemin1.empty()) {
+                    resultat = resultat + " Aucun chemin\n\n";
+                } else {
+                    double totalDuree = 0;
+                    for (Edge e : chemin1.getEdgeSet()) {
+                        totalDuree += (double) e.getAttribute("duree");
+                    }
+                    resultat = resultat + "Le chemin le plus court a une ";
+                    resultat = resultat + "durée totale de : " + String.format("%.0f", totalDuree) + " min\n\n";
+                }
+
+                lblStatut.setText(" Itineraire calcule : " + resultat);
+            }
+        }
+    }
+    
+    
+    
+    
+    
+    private void calculerEtAfficherCheminPlusSur() {
+        if (grapheCourant != null) {
+            String idDepart  = (String) cbDepart.getSelectedItem();
+            String idArrivee = (String) cbArrivee.getSelectedItem();
+
+            if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
+                JOptionPane.showMessageDialog(this,
+                        "Veuillez selectionner deux centres differents.",
+                        "Saisie invalide", JOptionPane.WARNING_MESSAGE);
+            } else {
+               
+               
                 Path chemin2 = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
                 String resultat = "";
 
@@ -509,27 +560,9 @@ public class FenetrePrincipale extends JFrame {
                     }
                 }
 
-                if (chemin1 != null && !chemin1.empty()) {
-                    for (Edge e : chemin1.getEdgeSet()) {
-                        e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
-                    }
-                }
-
-                // Texte : chemin1 en premier
-                if (chemin1 == null || chemin1.empty()) {
-                    resultat = resultat + "=== Chemin court (duree) ===\nAucun chemin\n\n";
-                } else {
-                    double totalDuree = 0;
-                    for (Edge e : chemin1.getEdgeSet()) {
-                        totalDuree += (double) e.getAttribute("duree");
-                    }
-                    resultat = resultat + "=== Chemin court (duree) ===\n";
-                    resultat = resultat + cheminToString(chemin1) + "\n";
-                    resultat = resultat + "Duree totale : " + String.format("%.0f", totalDuree) + " min\n\n";
-                }
-
+                
                 if (chemin2 == null || chemin2.empty()) {
-                    resultat = resultat + "=== Chemin sur ===\nAucun chemin (routes peu fiables bloquees)";
+                    resultat = resultat + "Aucun chemin (routes peu fiables bloquees)";
                 } else {
                     double totalEstimee = 0;
                     for (Edge e : chemin2.getEdgeSet()) {
@@ -537,13 +570,11 @@ public class FenetrePrincipale extends JFrame {
                         double fiabilite = (double) e.getAttribute("fiabilite");
                         totalEstimee += duree * (20 - fiabilite * 10) / 10.0;
                     }
-                    resultat = resultat + "=== Chemin sur ===\n";
-                    resultat = resultat + cheminToString(chemin2) + "\n";
-                    resultat = resultat + "Duree estimee : " + String.format("%.0f", totalEstimee) + " min";
+                    resultat = resultat + "Le chemin le plus sûr a une ";
+                    resultat = resultat + "durée estimee de : " + String.format("%.0f", totalEstimee) + " min";
                 }
 
-                zoneResultat.setText(resultat);
-                lblStatut.setText("Itineraire calcule : " + idDepart + " -> " + idArrivee);
+                lblStatut.setText(" Itineraire calcule : " + resultat);
             }
         }
     }
