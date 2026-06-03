@@ -1,5 +1,5 @@
 package saeihm;
-//test
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -26,7 +26,8 @@ public class FenetrePrincipale extends JFrame {
     private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt;
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
-    private JComboBox<String> cbDepart, cbArrivee ;
+    private JComboBox<String> cbDepart, cbArrivee;
+    private JTextArea zoneResultat;
     private JPanel panneauGraphe;
     private JPanel panneauStats;
 
@@ -47,8 +48,9 @@ public class FenetrePrincipale extends JFrame {
     public FenetrePrincipale() {
         super("Medic'In");
 
-System.setProperty("org.graphstream.ui.renderer", 
-    "org.graphstream.ui.j2dviewer.J2DGraphRenderer");        
+        System.setProperty("org.graphstream.ui.renderer",
+                "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+
         initComposants();
         initActions();
 
@@ -124,19 +126,17 @@ System.setProperty("org.graphstream.ui.renderer",
         contraintesAff.gridy = 3;
         panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
-        // Panneau Itineraire : selection depart/arrivee + bouton + resultats
+        // Panneau Itineraire : selection depart/arrivee + 2 boutons (court / sur) + resultats
         JPanel panneauItineraire = new JPanel(new GridBagLayout());
         panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire"));
-        GridBagConstraints gciti = new GridBagConstraints() ;
-        
-        
+        GridBagConstraints gciti = new GridBagConstraints();
+
         JPanel panneauSel = new JPanel(new GridBagLayout());
         GridBagConstraints gcSel = new GridBagConstraints();
         gcSel.insets = new Insets(2, 4, 2, 4);
 
         cbDepart  = new JComboBox<>();
         cbArrivee = new JComboBox<>();
-
 
         gcSel.gridx = 0;
         gcSel.weightx = 0;
@@ -147,7 +147,6 @@ System.setProperty("org.graphstream.ui.renderer",
         gcSel.gridy = 1;
         panneauSel.add(new JLabel("Arrivee :"), gcSel);
 
-
         gcSel.gridx = 1;
         gcSel.weightx = 1;
         gcSel.fill = GridBagConstraints.HORIZONTAL;
@@ -157,15 +156,15 @@ System.setProperty("org.graphstream.ui.renderer",
         gcSel.gridy = 1;
         panneauSel.add(cbArrivee, gcSel);
 
-        
-        btCheminLePlusSur = new JButton("Calculer le chemin le plus sûr") ;
-        btCheminLePlusSur.setEnabled(false);
-        
-        btCheminLePlusCourt = new JButton("Calculer le chemin le plus court") ;
+        btCheminLePlusCourt = new JButton("Calculer le chemin le plus court");
         btCheminLePlusCourt.setEnabled(false);
-        
-        
-        
+
+        btCheminLePlusSur = new JButton("Calculer le chemin le plus sûr");
+        btCheminLePlusSur.setEnabled(false);
+
+        zoneResultat = new JTextArea(3, 1);
+        zoneResultat.setEditable(false);
+
         // Ligne 0 : panneauSel (combos depart/arrivee)
         gciti.gridx = 0;
         gciti.gridy = 0;
@@ -175,18 +174,24 @@ System.setProperty("org.graphstream.ui.renderer",
         gciti.insets = new Insets(2, 2, 2, 2);
         panneauItineraire.add(panneauSel, gciti);
 
-        // Ligne 1 : bouton centre, taille naturelle
+        // Ligne 1 : bouton chemin le plus court
         gciti.gridy = 1;
-        gciti.gridx = 0 ;
-        gciti.fill = GridBagConstraints.BOTH;
+        gciti.fill = GridBagConstraints.HORIZONTAL;
         gciti.anchor = GridBagConstraints.CENTER;
         gciti.weightx = 0;
         panneauItineraire.add(btCheminLePlusCourt, gciti);
 
-        // Ligne 2 : zone resultats qui prend l'espace restant
+        // Ligne 2 : bouton chemin le plus sur
         gciti.gridy = 2;
-        gciti.fill = GridBagConstraints.BOTH;
+        gciti.fill = GridBagConstraints.HORIZONTAL;
         panneauItineraire.add(btCheminLePlusSur, gciti);
+
+        // Ligne 3 : zone resultats qui prend l'espace restant
+        gciti.gridy = 3;
+        gciti.fill = GridBagConstraints.BOTH;
+        gciti.weightx = 1.0;
+        gciti.weighty = 1.0;
+        panneauItineraire.add(new JScrollPane(zoneResultat), gciti);
 
         // Empilement vertical : Statistiques, Affichage, Itineraire
         JPanel panneauDroite = new JPanel(new GridBagLayout());
@@ -204,60 +209,55 @@ System.setProperty("org.graphstream.ui.renderer",
         gbcDroite.weighty = 1.0;
         gbcDroite.fill = GridBagConstraints.BOTH;
         panneauDroite.add(panneauItineraire, gbcDroite);
-        
-        
-        // Question 6 IHM
-        
-        JPanel panneauTournee = new JPanel(new GridBagLayout()) ;
+
+        // Question 6 IHM : panneau tournee
+        JPanel panneauTournee = new JPanel(new GridBagLayout());
         panneauTournee.setBorder(BorderFactory.createTitledBorder("Tournée de véhicule"));
-        GridBagConstraints gct = new GridBagConstraints() ;
+        GridBagConstraints gct = new GridBagConstraints();
         gct.insets = new Insets(5, 2, 5, 2);
-        gct.fill = GridBagConstraints.NONE ;
-        
-        
-        
-        JComboBox cbCamion = new JComboBox() ;
-        cbCamion.addItem("Camion 1") ;
-        cbCamion.addItem("Camion 2") ;
-        
-        gct.anchor = GridBagConstraints.LINE_START ;
-        gct.gridx = 0 ;
-        gct.gridy = 0 ;
-        JLabel jCamion = new JLabel("Choix camion :") ;
-        panneauTournee.add(jCamion,gct) ;
-        
-        gct.anchor = GridBagConstraints.CENTER ;
-        gct.gridx = 1 ;
-        gct.gridy = 0 ;
-        panneauTournee.add(cbCamion, gct) ;
-        
-        gct.anchor = GridBagConstraints.LINE_START ;
-        gct.gridx = 0 ;
-        gct.gridy = 1 ;
-        JLabel jCentres = new JLabel("Type centres :") ;
-        panneauTournee.add(jCentres,gct) ;
-        
-        gct.anchor = GridBagConstraints.CENTER ;
-        gct.gridx = 1 ;
-        gct.gridy = 1 ;
-        JComboBox cbCentres = new JComboBox() ;
+        gct.fill = GridBagConstraints.NONE;
+
+        JComboBox cbCamion = new JComboBox();
+        cbCamion.addItem("Camion 1");
+        cbCamion.addItem("Camion 2");
+
+        gct.anchor = GridBagConstraints.LINE_START;
+        gct.gridx = 0;
+        gct.gridy = 0;
+        JLabel jCamion = new JLabel("Choix camion :");
+        panneauTournee.add(jCamion, gct);
+
+        gct.anchor = GridBagConstraints.CENTER;
+        gct.gridx = 1;
+        gct.gridy = 0;
+        panneauTournee.add(cbCamion, gct);
+
+        gct.anchor = GridBagConstraints.LINE_START;
+        gct.gridx = 0;
+        gct.gridy = 1;
+        JLabel jCentres = new JLabel("Type centres :");
+        panneauTournee.add(jCentres, gct);
+
+        gct.anchor = GridBagConstraints.CENTER;
+        gct.gridx = 1;
+        gct.gridy = 1;
+        JComboBox cbCentres = new JComboBox();
         cbCentres.addItem("Tous");
         cbCentres.addItem("Centres M");
         cbCentres.addItem("Centres O");
         cbCentres.addItem("Centres N");
-        panneauTournee.add(cbCentres, gct) ;
-        
-        gct.fill = GridBagConstraints.BOTH ;
-        gct.gridx = 0 ;
-        gct.gridwidth = 2 ;
-        gct.gridy = 2 ;
+        panneauTournee.add(cbCentres, gct);
+
+        gct.fill = GridBagConstraints.BOTH;
+        gct.gridx = 0;
+        gct.gridwidth = 2;
+        gct.gridy = 2;
         JButton btCalculerTournee = new JButton("Calculer Tournée");
         btCalculerTournee.setEnabled(false);
-        panneauTournee.add(btCalculerTournee, gct) ;
-        
-        gbcDroite.gridy = 3 ;
-        panneauDroite.add(panneauTournee, gbcDroite) ;
-        
+        panneauTournee.add(btCalculerTournee, gct);
+
+        gbcDroite.gridy = 3;
+        panneauDroite.add(panneauTournee, gbcDroite);
 
         lblStatut = new JLabel(" ");
 
@@ -267,9 +267,6 @@ System.setProperty("org.graphstream.ui.renderer",
         contenu.add(panneauDroite,  BorderLayout.EAST);
         contenu.add(lblStatut,      BorderLayout.SOUTH);
         this.setContentPane(contenu);
-        
-        
- 
     }
 
     /**
@@ -292,10 +289,10 @@ System.setProperty("org.graphstream.ui.renderer",
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
-        
+
         btCheminLePlusCourt.addActionListener(e -> calculerEtAfficherCheminPlusCourt());
         btCheminLePlusSur.addActionListener(e -> calculerEtAfficherCheminPlusSur());
-        
+
         java.awt.event.ActionListener majAffichage = e -> appliquerPreferencesAffichage();
         cbFiabilite.addActionListener(majAffichage);
         cbDistance.addActionListener(majAffichage);
@@ -325,51 +322,47 @@ System.setProperty("org.graphstream.ui.renderer",
         ViewPanel vue = viewerCourant.addDefaultView(false);
         vueCourante = vue;
 
-vue.addMouseListener(new MouseAdapter() {
+        vue.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                int xPix = e.getX() - 5;
-                int yPix = e.getY();
-
-                // Essai direct
-                GraphicElement element = vueCourante.findNodeOrSpriteAt(xPix, yPix);
-                Node noeud = null;
-
-                if (element != null) {
-                    noeud = grapheCourant.getNode(element.getId());
-                } else {
-                    // Fallback : convertit chaque sommet en pixels via la camera
-                    // et cherche le plus proche du clic (tolerance 30 pixels).
-                    // On lit les positions dans le GraphicGraph du viewer, pas
-                    // dans le graphe, car l'autoLayout n'ecrit pas xyz dedans.
-                    org.graphstream.ui.view.Camera camera = vueCourante.getCamera();
-                    org.graphstream.ui.graphicGraph.GraphicGraph gg = viewerCourant.getGraphicGraph();
-                    double meilleureDist = 30;
+                GraphicElement element = vueCourante.findNodeOrSpriteAt(e.getX() - 5, e.getY());
+                if (element == null) {
+                    Point3 clicGu = vueCourante.getCamera().transformPxToGu(e.getX(), e.getY());
+                    double meilleureDist = Double.MAX_VALUE;
+                    Node noeudPlusProche = null;
                     for (Node n : grapheCourant) {
-                        org.graphstream.ui.graphicGraph.GraphicNode gn =
-                                (org.graphstream.ui.graphicGraph.GraphicNode) gg.getNode(n.getId());
-                        if (gn == null) continue;
-                        Point3 pixel = camera.transformGuToPx(gn.getX(), gn.getY(), 0);
-                        double dx = pixel.x - xPix;
-                        double dy = pixel.y - yPix;
+                        double[] pos = org.graphstream.algorithm.Toolkit.nodePosition(n);
+                        double dx = pos[0] - clicGu.x;
+                        double dy = pos[1] - clicGu.y;
                         double d = Math.sqrt(dx * dx + dy * dy);
                         if (d < meilleureDist) {
                             meilleureDist = d;
-                            noeud = n;
+                            noeudPlusProche = n;
                         }
                     }
+                    if (noeudPlusProche != null && meilleureDist < 3.0) {
+                        for (Node autre : grapheCourant) {
+                            autre.removeAttribute("ui.clicked");
+                        }
+                        noeudPlusProche.setAttribute("ui.clicked");
+                        if (SwingUtilities.isRightMouseButton(e)) {
+                            ouvrirInfosCentre(noeudPlusProche.getId());
+                        } else {
+                            lblStatut.setText("Centre selectionne : " + noeudPlusProche.getId());
+                        }
+                    }
+                    return;
                 }
 
-                if (noeud != null) {
-                    for (Node autre : grapheCourant) {
-                        autre.removeAttribute("ui.clicked");
-                    }
-                    noeud.setAttribute("ui.clicked");
-                    if (SwingUtilities.isRightMouseButton(e)) {
-                        ouvrirInfosCentre(noeud.getId());
-                    } else {
-                        lblStatut.setText("Centre selectionne : " + noeud.getId());
-                    }
+                Node noeud = grapheCourant.getNode(element.getId());
+                for (Node autre : grapheCourant) {
+                    autre.removeAttribute("ui.clicked");
+                }
+                noeud.setAttribute("ui.clicked");
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    ouvrirInfosCentre(noeud.getId());
+                } else {
+                    lblStatut.setText("Centre selectionne : " + noeud.getId());
                 }
             }
         });
@@ -477,7 +470,7 @@ vue.addMouseListener(new MouseAdapter() {
 
     /**
      * Remplit les combo boxes depart/arrivee avec les ids de tous les sommets du graphe courant.
-     * Active le bouton de calcul une fois rempli.
+     * Active les boutons de calcul une fois rempli.
      */
     private void populerCombos() {
         cbDepart.removeAllItems();
@@ -486,10 +479,9 @@ vue.addMouseListener(new MouseAdapter() {
             cbDepart.addItem(n.getId());
             cbArrivee.addItem(n.getId());
         }
-        
         btCheminLePlusCourt.setEnabled(true);
         btCheminLePlusSur.setEnabled(true);
-        
+        zoneResultat.setText("");
     }
 
     /**
@@ -513,117 +505,114 @@ vue.addMouseListener(new MouseAdapter() {
         String sb = "";
         for (Node n : chemin.getNodePath()) {
             if (!sb.equals("")) {
-           
                 sb = sb + " -> ";
             }
-            sb= sb + n.getId();
+            sb = sb + n.getId();
         }
         return sb;
     }
 
     /**
-     * Lance les deux calculs Dijkstra (duree minimale + chemin sur) entre les centres
-     * selectionnes dans les combo boxes, surligne les chemins sur le graphe et
-     * Chemin 1 (duree min) surligne en orange, chemin 2 (sur) en violet.
+     * Calcule et affiche le chemin le plus court (duree minimale) entre les
+     * centres selectionnes dans les combo boxes. Surligne le chemin en orange
+     * sur le graphe et affiche le resultat dans zoneResultat.
      */
     private void calculerEtAfficherCheminPlusCourt() {
-        if (grapheCourant != null) {
-            String idDepart  = (String) cbDepart.getSelectedItem();
-            String idArrivee = (String) cbArrivee.getSelectedItem();
+        if (grapheCourant == null) return;
 
-            if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
-                JOptionPane.showMessageDialog(this,
-                        "Veuillez selectionner deux centres differents.",
-                        "Saisie invalide", JOptionPane.WARNING_MESSAGE);
-            } else {
-                // Calculer les deux chemins
-                Path chemin1 = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
-                
-                String resultat = "";
+        String idDepart  = (String) cbDepart.getSelectedItem();
+        String idArrivee = (String) cbArrivee.getSelectedItem();
 
-                // Remettre a zero PUIS colorier
-                reinitialiserSurlignageChemin();
+        if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
+            JOptionPane.showMessageDialog(this,
+                    "Veuillez selectionner deux centres differents.",
+                    "Saisie invalide", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-                
+        Path chemin = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
 
-                if (chemin1 != null && !chemin1.empty()) {
-                    for (Edge e : chemin1.getEdgeSet()) {
-                        e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
-                    }
-                }
+        reinitialiserSurlignageChemin();
 
-                // Texte : chemin1 en premier
-                if (chemin1 == null || chemin1.empty()) {
-                    resultat = resultat + " Aucun chemin\n\n";
-                } else {
-                    double totalDuree = 0;
-                    for (Edge e : chemin1.getEdgeSet()) {
-                        totalDuree += (double) e.getAttribute("duree");
-                    }
-                    resultat = resultat + "Le chemin le plus court a une ";
-                    resultat = resultat + "durée totale de : " + String.format("%.0f", totalDuree) + " min\n\n";
-                }
-
-                lblStatut.setText(" Itineraire calcule : " + resultat);
+        if (chemin != null && !chemin.empty()) {
+            for (Edge e : chemin.getEdgeSet()) {
+                e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
             }
         }
-    }
-    
-    
-    
-    
-    
-    private void calculerEtAfficherCheminPlusSur() {
-        if (grapheCourant != null) {
-            String idDepart  = (String) cbDepart.getSelectedItem();
-            String idArrivee = (String) cbArrivee.getSelectedItem();
 
-            if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
-                JOptionPane.showMessageDialog(this,
-                        "Veuillez selectionner deux centres differents.",
-                        "Saisie invalide", JOptionPane.WARNING_MESSAGE);
-            } else {
-               
-               
-                Path chemin2 = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
-                String resultat = "";
-
-                // Remettre a zero PUIS colorier
-                reinitialiserSurlignageChemin();
-
-                if (chemin2 != null && !chemin2.empty()) {
-                    for (Edge e : chemin2.getEdgeSet()) {
-                        e.setAttribute("ui.style", "fill-color: rgb(148,0,211); size: 4px;");
-                    }
-                }
-
-                
-                if (chemin2 == null || chemin2.empty()) {
-                    resultat = resultat + "Aucun chemin (routes peu fiables bloquees)";
-                } else {
-                    double totalEstimee = 0;
-                    for (Edge e : chemin2.getEdgeSet()) {
-                        double duree     = (double) e.getAttribute("duree");
-                        double fiabilite = (double) e.getAttribute("fiabilite");
-                        totalEstimee += duree * (20 - fiabilite * 10) / 10.0;
-                    }
-                    resultat = resultat + "Le chemin le plus sûr a une ";
-                    resultat = resultat + "durée estimee de : " + String.format("%.0f", totalEstimee) + " min";
-                }
-
-                lblStatut.setText(" Itineraire calcule : " + resultat);
+        String resultat;
+        if (chemin == null || chemin.empty()) {
+            resultat = "=== Chemin le plus court (duree) ===\nAucun chemin\n";
+        } else {
+            double totalDuree = 0;
+            for (Edge e : chemin.getEdgeSet()) {
+                totalDuree += (double) e.getAttribute("duree");
             }
+            resultat = "=== Chemin le plus court (duree) ===\n"
+                     + cheminToString(chemin) + "\n"
+                     + "Duree totale : " + String.format("%.0f", totalDuree) + " min\n";
         }
+
+        zoneResultat.setText(resultat);
+        lblStatut.setText("Itineraire calcule : " + idDepart + " -> " + idArrivee);
     }
 
     /**
-     * Ouvre une boite de dialogue avec les informations du centre clique (clic droit).
-     * A completer pour la Q5 : distances, plus proches centres par type, etc.
+     * Calcule et affiche le chemin le plus sur (penalise par la fiabilite) entre les
+     * centres selectionnes. Surligne le chemin en violet sur le graphe et affiche
+     * le resultat dans zoneResultat.
+     */
+    private void calculerEtAfficherCheminPlusSur() {
+        if (grapheCourant == null) return;
+
+        String idDepart  = (String) cbDepart.getSelectedItem();
+        String idArrivee = (String) cbArrivee.getSelectedItem();
+
+        if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
+            JOptionPane.showMessageDialog(this,
+                    "Veuillez selectionner deux centres differents.",
+                    "Saisie invalide", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Path chemin = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
+
+        reinitialiserSurlignageChemin();
+
+        if (chemin != null && !chemin.empty()) {
+            for (Edge e : chemin.getEdgeSet()) {
+                e.setAttribute("ui.style", "fill-color: rgb(148,0,211); size: 4px;");
+            }
+        }
+
+        String resultat;
+        if (chemin == null || chemin.empty()) {
+            resultat = "=== Chemin le plus sur ===\nAucun chemin (routes peu fiables bloquees)\n";
+        } else {
+            double totalEstimee = 0;
+            for (Edge e : chemin.getEdgeSet()) {
+                double duree     = (double) e.getAttribute("duree");
+                double fiabilite = (double) e.getAttribute("fiabilite");
+                totalEstimee += duree * (20 - fiabilite * 10) / 10.0;
+            }
+            resultat = "=== Chemin le plus sur ===\n"
+                     + cheminToString(chemin) + "\n"
+                     + "Duree estimee : " + String.format("%.0f", totalEstimee) + " min\n";
+        }
+
+        zoneResultat.setText(resultat);
+        lblStatut.setText("Itineraire calcule : " + idDepart + " -> " + idArrivee);
+    }
+
+    /**
+     * Ouvre une fenetre avec les informations du centre clique (clic droit).
+     * Delegue a FenetreInfosCentre pour les details (distances, plus proches
+     * centres par type, etc. - cf. Q5).
      * @param nodeId Identifiant du sommet clique (ex: "S1")
      */
     private void ouvrirInfosCentre(String nodeId) {
         if (grapheCourant == null) return;
         if (grapheCourant.getNode(nodeId) == null) return;
         new FenetreInfosCentre(this, grapheCourant, nodeId);
-    }    
+    }
 }
