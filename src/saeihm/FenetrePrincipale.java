@@ -3,7 +3,9 @@ package saeihm;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URL;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 
 import org.graphstream.graph.Graph;
 import org.graphstream.ui.graphicGraph.GraphicElement;
@@ -71,14 +73,34 @@ public class FenetrePrincipale extends JFrame {
      * empiler verticalement leurs composants en les alignant a gauche.
      */
     private void initComposants() {
-        JPanel panneauActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+// Boutons d'actions, alignes a gauche
+        JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btGenerer = new JButton("Generer un graphe aleatoire");
         btCharger = new JButton("Charger un graphe (.csv)");
         btRoutesRisquees = new JButton("Afficher les routes risquees");
         btRoutesRisquees.setEnabled(false);
-        panneauActions.add(btGenerer);
-        panneauActions.add(btCharger);
-        panneauActions.add(btRoutesRisquees);
+        panneauBoutons.add(btGenerer);
+        panneauBoutons.add(btCharger);
+        panneauBoutons.add(btRoutesRisquees);
+
+        // Logo en haut a droite
+        JLabel lblLogo = new JLabel();
+        URL urlLogo = getClass().getResource("logo.png");
+        if (urlLogo != null) {
+            ImageIcon icone = new ImageIcon(urlLogo);
+            //Icône de la Fenetre
+            this.setIconImage(new ImageIcon(urlLogo).getImage());
+
+            // Icone à gauche
+            Image img = icone.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+            lblLogo.setIcon(new ImageIcon(img));
+        }
+        lblLogo.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 10));
+
+        // Panneau global : boutons a gauche, logo a droite
+        JPanel panneauActions = new JPanel(new BorderLayout());
+        panneauActions.add(panneauBoutons, BorderLayout.CENTER);
+        panneauActions.add(lblLogo, BorderLayout.WEST);
 
         panneauGraphe = new JPanel(new BorderLayout());
         panneauGraphe.setBorder(BorderFactory.createTitledBorder("Carte du district"));
@@ -267,6 +289,30 @@ public class FenetrePrincipale extends JFrame {
         contenu.add(panneauDroite,  BorderLayout.EAST);
         contenu.add(lblStatut,      BorderLayout.SOUTH);
         this.setContentPane(contenu);
+        
+        btGenerer.setBackground(new Color(76, 175, 80));
+        btGenerer.setForeground(Color.WHITE);
+        btGenerer.setFocusPainted(false);
+
+        btCharger.setBackground(new Color(33, 150, 243));
+        btCharger.setForeground(Color.WHITE);
+        btCharger.setFocusPainted(false);
+
+        btRoutesRisquees.setBackground(new Color(244, 67, 54));
+        btRoutesRisquees.setForeground(Color.WHITE);
+        btRoutesRisquees.setFocusPainted(false);
+
+        btGenerer.setToolTipText("Genere un graphe avec un nombre de centres choisi");
+        btCharger.setToolTipText("Charge un graphe depuis un fichier CSV");
+        btRoutesRisquees.setToolTipText("Met en evidence les routes trop peu fiables");
+        btCheminLePlusCourt.setToolTipText("Plus court trajet en duree (Dijkstra)");
+        btCheminLePlusSur.setToolTipText("Trajet le plus fiable (penalise par fiabilite)");
+        
+        panneauStats.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)), "Statistiques", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        
+        lblNbMaternite.setForeground(new Color(200, 0, 0));   // rouge
+        lblNbBloc.setForeground(new Color(0, 0, 200));        // bleu
+        lblNbCentre.setForeground(new Color(0, 140, 0));      // vert
     }
 
     /**
@@ -325,34 +371,8 @@ public class FenetrePrincipale extends JFrame {
         vue.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                GraphicElement element = vueCourante.findNodeOrSpriteAt(e.getX() - 5, e.getY());
-                if (element == null) {
-                    Point3 clicGu = vueCourante.getCamera().transformPxToGu(e.getX(), e.getY());
-                    double meilleureDist = Double.MAX_VALUE;
-                    Node noeudPlusProche = null;
-                    for (Node n : grapheCourant) {
-                        double[] pos = org.graphstream.algorithm.Toolkit.nodePosition(n);
-                        double dx = pos[0] - clicGu.x;
-                        double dy = pos[1] - clicGu.y;
-                        double d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < meilleureDist) {
-                            meilleureDist = d;
-                            noeudPlusProche = n;
-                        }
-                    }
-                    if (noeudPlusProche != null && meilleureDist < 3.0) {
-                        for (Node autre : grapheCourant) {
-                            autre.removeAttribute("ui.clicked");
-                        }
-                        noeudPlusProche.setAttribute("ui.clicked");
-                        if (SwingUtilities.isRightMouseButton(e)) {
-                            ouvrirInfosCentre(noeudPlusProche.getId());
-                        } else {
-                            lblStatut.setText("Centre selectionne : " + noeudPlusProche.getId());
-                        }
-                    }
-                    return;
-                }
+                GraphicElement element = vueCourante.findNodeOrSpriteAt(e.getX(), e.getY());
+                if (element == null) return;
 
                 Node noeud = grapheCourant.getNode(element.getId());
                 for (Node autre : grapheCourant) {
