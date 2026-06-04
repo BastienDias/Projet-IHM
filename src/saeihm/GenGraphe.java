@@ -95,15 +95,8 @@ public class GenGraphe {
     public static Graph construireGrapheAleatoire(int nbSommets) {
         Graph carteDistrict = new SingleGraph("carte");
         carteDistrict.setAttribute("ui.stylesheet", STYLESHEET);
-
         Random rand = new Random();
-
-        // Compteurs LOCAUX : repartent a zero a chaque appel (corrige le bug
-        // des compteurs static qui s'accumulaient entre deux generations).
-        int nbMaternite = 0;
-        int nbBloc = 0;
-        int nbCentre = 0;
-        int nbRoute = 0;
+        int nbMaternite = 0, nbBloc = 0, nbCentre = 0, nbRoute = 0;
 
         for (int i = 0; i < nbSommets; i++) {
             double tirage = rand.nextDouble();
@@ -126,15 +119,30 @@ public class GenGraphe {
             }
             node.setAttribute("ui.label", node.getId());
         }
-
+        
+        //Ajoute une arrête entre deux sommets aléatoirement pour assurer un graphe connexe
+        List<Node> nodesAjoutes = new ArrayList<>();
+        nodesAjoutes.add(carteDistrict.getNode(0));
+        for (int i = 1; i < carteDistrict.getNodeCount(); i++) {
+            Node nodeI = carteDistrict.getNode(i);
+            Node nodeAleatoire = nodesAjoutes.get(rand.nextInt(nodesAjoutes.size()));
+            nbRoute++;
+            Edge e = carteDistrict.addEdge("Route" + nbRoute, nodeI.getId(), nodeAleatoire.getId());
+            setFiabiliteRoute(e, rand);
+            setDistanceRoute(e, rand);
+            setDureeRoute(e, rand);
+            majLabelArete(e);
+            nodesAjoutes.add(nodeI);
+        }
+        
+        //Ajoute des arrêtes entre les sommets aléatoirement avec une probabilité de 1/5
         for (int j = 0; j < carteDistrict.getNodeCount(); j++) {
             for (int k = j + 1; k < carteDistrict.getNodeCount(); k++) {
-                if (rand.nextDouble() <= PROBA_AUTRE) {
+                Node nodeJ = carteDistrict.getNode(j);
+                Node nodeK = carteDistrict.getNode(k);
+                if (!nodeJ.hasEdgeBetween(nodeK) && rand.nextDouble() <= PROBA_AUTRE) {
                     nbRoute++;
-                    Node nodeJ = carteDistrict.getNode(j);
-                    Node nodeK = carteDistrict.getNode(k);
-                    Edge e = carteDistrict.addEdge("Route" + nbRoute,
-                            nodeJ.getId(), nodeK.getId());
+                    Edge e = carteDistrict.addEdge("Route" + nbRoute,nodeJ.getId(), nodeK.getId());
                     setFiabiliteRoute(e, rand);
                     setDistanceRoute(e, rand);
                     setDureeRoute(e, rand);
@@ -358,6 +366,5 @@ public class GenGraphe {
             }
         }
         return idpt ;
-    }
-    
+    }       
 }
