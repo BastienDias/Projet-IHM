@@ -1,4 +1,4 @@
-package saeihm;
+package saeihm.vue;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -15,6 +15,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
+
+import saeihm.modele.GenGraphe;
 
 /**
  * Fenetre principale de l'application Medic'In.
@@ -68,11 +70,9 @@ public class FenetrePrincipale extends JFrame {
      * A droite : panneau d'informations affichant les compteurs M/O/N
      * et le panneau de preferences d'affichage.
      * En bas : barre de statut.
-     * Les panneaux Statistiques et Affichage utilisent GridBagLayout pour
-     * empiler verticalement leurs composants en les alignant a gauche.
      */
     private void initComposants() {
-// Boutons d'actions, alignes a gauche
+        // Boutons d'actions, alignes a gauche
         JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btGenerer = new JButton("Generer un graphe aleatoire");
         btCharger = new JButton("Charger un graphe (.csv)");
@@ -82,21 +82,17 @@ public class FenetrePrincipale extends JFrame {
         panneauBoutons.add(btCharger);
         panneauBoutons.add(btRoutesRisquees);
 
-        // Logo en haut a droite
+        // Logo en haut a gauche
         JLabel lblLogo = new JLabel();
         URL urlLogo = getClass().getResource("logo.png");
         if (urlLogo != null) {
             ImageIcon icone = new ImageIcon(urlLogo);
-            //Icône de la Fenetre
             this.setIconImage(new ImageIcon(urlLogo).getImage());
-
-            // Icone à gauche
             Image img = icone.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
             lblLogo.setIcon(new ImageIcon(img));
         }
         lblLogo.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 10));
 
-        // Panneau global : boutons a gauche, logo a droite
         JPanel panneauActions = new JPanel(new BorderLayout());
         panneauActions.add(panneauBoutons, BorderLayout.CENTER);
         panneauActions.add(lblLogo, BorderLayout.WEST);
@@ -114,8 +110,8 @@ public class FenetrePrincipale extends JFrame {
         contraintesStats.insets = new Insets(2, 5, 2, 5);
 
         lblNbMaternite = new JLabel("Maternites (M) : -");
-        lblNbBloc      = new JLabel("Blocs operatoires (O) : -");
-        lblNbCentre    = new JLabel("Centres de nutrition (N) : -");
+        lblNbBloc = new JLabel("Blocs operatoires (O) : -");
+        lblNbCentre = new JLabel("Centres de nutrition (N) : -");
 
         contraintesStats.gridy = 0;
         panneauStats.add(lblNbMaternite, contraintesStats);
@@ -124,8 +120,7 @@ public class FenetrePrincipale extends JFrame {
         contraintesStats.gridy = 2;
         panneauStats.add(lblNbCentre, contraintesStats);
 
-        // Panneau Affichage : controle ce qui apparait sur les aretes et sommets.
-        // Par defaut : seuls les labels de sommets sont visibles (plus lisible).
+        // Panneau Affichage
         JPanel panneauAffichage = new JPanel(new GridBagLayout());
         panneauAffichage.setBorder(BorderFactory.createTitledBorder("Affichage"));
         GridBagConstraints contraintesAff = new GridBagConstraints();
@@ -133,10 +128,10 @@ public class FenetrePrincipale extends JFrame {
         contraintesAff.anchor = GridBagConstraints.WEST;
         contraintesAff.insets = new Insets(2, 5, 2, 5);
 
-        cbFiabilite      = new JCheckBox("Fiabilite sur les routes",     false);
-        cbDistance       = new JCheckBox("Distance sur les routes",      false);
-        cbDuree          = new JCheckBox("Duree sur les routes",         false);
-        cbLabelsSommets  = new JCheckBox("Identifiants des sommets",     true);
+        cbFiabilite = new JCheckBox("Fiabilite sur les routes", false);
+        cbDistance = new JCheckBox("Distance sur les routes", false);
+        cbDuree = new JCheckBox("Duree sur les routes", false);
+        cbLabelsSommets = new JCheckBox("Identifiants des sommets", true);
 
         contraintesAff.gridy = 0;
         panneauAffichage.add(cbFiabilite, contraintesAff);
@@ -147,7 +142,7 @@ public class FenetrePrincipale extends JFrame {
         contraintesAff.gridy = 3;
         panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
-        // Panneau Itineraire : selection depart/arrivee + 2 boutons (court / sur) + resultats
+        // Panneau Itineraire
         JPanel panneauItineraire = new JPanel(new GridBagLayout());
         panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire"));
         GridBagConstraints gciti = new GridBagConstraints();
@@ -156,7 +151,7 @@ public class FenetrePrincipale extends JFrame {
         GridBagConstraints gcSel = new GridBagConstraints();
         gcSel.insets = new Insets(2, 4, 2, 4);
 
-        cbDepart  = new JComboBox<>();
+        cbDepart = new JComboBox<>();
         cbArrivee = new JComboBox<>();
 
         gcSel.gridx = 0;
@@ -180,10 +175,9 @@ public class FenetrePrincipale extends JFrame {
         btCheminLePlusCourt = new JButton("Calculer le chemin le plus court");
         btCheminLePlusCourt.setEnabled(false);
 
-        btCheminLePlusSur = new JButton("Calculer le chemin le plus sûr");
+        btCheminLePlusSur = new JButton("Calculer le chemin le plus sur");
         btCheminLePlusSur.setEnabled(false);
 
-        // Ligne 0 : panneauSel (combos depart/arrivee)
         gciti.gridx = 0;
         gciti.gridy = 0;
         gciti.fill = GridBagConstraints.HORIZONTAL;
@@ -192,14 +186,12 @@ public class FenetrePrincipale extends JFrame {
         gciti.insets = new Insets(2, 2, 2, 2);
         panneauItineraire.add(panneauSel, gciti);
 
-        // Ligne 1 : bouton chemin le plus court
         gciti.gridy = 1;
         gciti.fill = GridBagConstraints.HORIZONTAL;
         gciti.anchor = GridBagConstraints.CENTER;
         gciti.weightx = 0;
         panneauItineraire.add(btCheminLePlusCourt, gciti);
 
-        // Ligne 2 : bouton chemin le plus sur
         gciti.gridy = 2;
         gciti.fill = GridBagConstraints.HORIZONTAL;
         panneauItineraire.add(btCheminLePlusSur, gciti);
@@ -223,7 +215,7 @@ public class FenetrePrincipale extends JFrame {
 
         // Question 6 IHM : panneau tournee
         JPanel panneauTournee = new JPanel(new GridBagLayout());
-        panneauTournee.setBorder(BorderFactory.createTitledBorder("Tournée de véhicule"));
+        panneauTournee.setBorder(BorderFactory.createTitledBorder("Tournee de vehicule"));
         GridBagConstraints gct = new GridBagConstraints();
         gct.insets = new Insets(5, 2, 5, 2);
         gct.fill = GridBagConstraints.NONE;
@@ -263,7 +255,7 @@ public class FenetrePrincipale extends JFrame {
         gct.gridx = 0;
         gct.gridwidth = 2;
         gct.gridy = 2;
-        JButton btCalculerTournee = new JButton("Calculer Tournée");
+        JButton btCalculerTournee = new JButton("Calculer Tournee");
         btCalculerTournee.setEnabled(false);
         panneauTournee.add(btCalculerTournee, gct);
 
@@ -274,11 +266,11 @@ public class FenetrePrincipale extends JFrame {
 
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.add(panneauActions, BorderLayout.NORTH);
-        contenu.add(panneauGraphe,  BorderLayout.CENTER);
-        contenu.add(panneauDroite,  BorderLayout.EAST);
-        contenu.add(lblStatut,      BorderLayout.SOUTH);
+        contenu.add(panneauGraphe, BorderLayout.CENTER);
+        contenu.add(panneauDroite, BorderLayout.EAST);
+        contenu.add(lblStatut, BorderLayout.SOUTH);
         this.setContentPane(contenu);
-        
+
         btGenerer.setBackground(new Color(76, 175, 80));
         btGenerer.setForeground(Color.WHITE);
         btGenerer.setFocusPainted(false);
@@ -296,12 +288,12 @@ public class FenetrePrincipale extends JFrame {
         btRoutesRisquees.setToolTipText("Met en evidence les routes trop peu fiables");
         btCheminLePlusCourt.setToolTipText("Plus court trajet en duree (Dijkstra)");
         btCheminLePlusSur.setToolTipText("Trajet le plus fiable (penalise par fiabilite)");
-        
+
         panneauStats.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)), "Statistiques", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
-        
-        lblNbMaternite.setForeground(new Color(200, 0, 0));   // rouge
-        lblNbBloc.setForeground(new Color(0, 0, 200));        // bleu
-        lblNbCentre.setForeground(new Color(0, 140, 0));      // vert
+
+        lblNbMaternite.setForeground(new Color(200, 0, 0));
+        lblNbBloc.setForeground(new Color(0, 0, 200));
+        lblNbCentre.setForeground(new Color(0, 140, 0));
     }
 
     /**
@@ -337,10 +329,6 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Affiche le graphe passe en parametre dans le panneau central.
-     * Sous gs-core 1.3, on instancie un Viewer puis on recupere une ViewPanel via
-     * addDefaultView(false) qui empeche GraphStream d'ouvrir sa propre JFrame.
-     * Si un viewer etait deja actif, il est ferme proprement avant d'en creer un nouveau
-     * pour eviter une fuite de threads.
      * @param graphe Graphe a afficher. Si null, la methode sort immediatement.
      */
     private void afficherGraphe(Graph graphe) {
@@ -405,7 +393,6 @@ public class FenetrePrincipale extends JFrame {
     /**
      * Demande un seuil de fiabilite a l'utilisateur via une boite de dialogue,
      * puis colore en rouge les aretes du graphe dont la fiabilite est strictement inferieure.
-     * En cas de saisie invalide (non numerique ou hors plage), une boite d'erreur s'affiche.
      */
     private void demanderEtAfficherRoutesRisquees() {
         if (grapheCourant == null) return;
@@ -436,7 +423,6 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Repropage les preferences d'affichage cochees vers le graphe courant.
-     * Lue chaque fois qu'une case a cocher du panneau Affichage est modifiee.
      */
     private void appliquerPreferencesAffichage() {
         if (grapheCourant != null) {
@@ -456,7 +442,7 @@ public class FenetrePrincipale extends JFrame {
     private Graph demanderNbSommets() {
         String saisie = JOptionPane.showInputDialog(this,
                 "Choisir le nombre de centres de la carte\n",
-                "Générer le graphe",
+                "Generer le graphe",
                 JOptionPane.QUESTION_MESSAGE);
         if (saisie == null) return null;
 
@@ -479,7 +465,6 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Remplit les combo boxes depart/arrivee avec les ids de tous les sommets du graphe courant.
-     * Active les boutons de calcul une fois rempli.
      */
     private void populerCombos() {
         cbDepart.removeAllItems();
@@ -494,7 +479,6 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Retire le surlignage (ui.style) de toutes les aretes du graphe courant.
-     * Appele avant chaque nouveau calcul d'itineraire.
      */
     private void reinitialiserSurlignageChemin() {
         if (grapheCourant != null) {
@@ -522,12 +506,11 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Calcule et affiche le chemin le plus court (duree minimale) entre les
-     * centres selectionnes dans les combo boxes. Surligne le chemin en orange
-     * sur le graphe et affiche le resultat dans zoneResultat.
+     * centres selectionnes dans les combo boxes.
      */
     private void calculerEtAfficherCheminPlusCourt() {
         if (grapheCourant != null) {
-            String idDepart  = (String) cbDepart.getSelectedItem();
+            String idDepart = (String) cbDepart.getSelectedItem();
             String idArrivee = (String) cbArrivee.getSelectedItem();
 
             if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
@@ -535,32 +518,27 @@ public class FenetrePrincipale extends JFrame {
                         "Veuillez selectionner deux centres differents.",
                         "Saisie invalide", JOptionPane.WARNING_MESSAGE);
             } else {
-                // Calculer les deux chemins
                 Path chemin1 = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
-                
+
                 String resultat = "";
 
-                // Remettre a zero PUIS colorier
                 reinitialiserSurlignageChemin();
 
-                
-
                 if (chemin1 != null && !chemin1.empty()) {
-                    for (Edge e : chemin1.getEdgeSet()) {
+                    for (Edge e : chemin1.getEdgePath()) {
                         e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
                     }
                 }
 
-                // Texte : chemin1 en premier
                 if (chemin1 == null || chemin1.empty()) {
-                    resultat = resultat + " Aucun chemin\n\n";
+                    resultat = resultat + " Aucun chemin";
                 } else {
                     double totalDuree = 0;
-                    for (Edge e : chemin1.getEdgeSet()) {
+                    for (Edge e : chemin1.getEdgePath()) {
                         totalDuree += (double) e.getAttribute("duree");
                     }
                     resultat = resultat + "Le chemin le plus court a une ";
-                    resultat = resultat + "durée totale de : " + String.format("%.0f", totalDuree) + " min\n\n";
+                    resultat = resultat + "duree totale de : " + String.format("%.0f", totalDuree) + " min";
                 }
 
                 lblStatut.setText(" Itineraire calcule : " + resultat);
@@ -570,12 +548,11 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Calcule et affiche le chemin le plus sur (penalise par la fiabilite) entre les
-     * centres selectionnes. Surligne le chemin en violet sur le graphe et affiche
-     * le resultat dans zoneResultat.
+     * centres selectionnes.
      */
     private void calculerEtAfficherCheminPlusSur() {
         if (grapheCourant != null) {
-            String idDepart  = (String) cbDepart.getSelectedItem();
+            String idDepart = (String) cbDepart.getSelectedItem();
             String idArrivee = (String) cbArrivee.getSelectedItem();
 
             if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
@@ -583,32 +560,28 @@ public class FenetrePrincipale extends JFrame {
                         "Veuillez selectionner deux centres differents.",
                         "Saisie invalide", JOptionPane.WARNING_MESSAGE);
             } else {
-               
-               
                 Path chemin2 = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
                 String resultat = "";
 
-                // Remettre a zero PUIS colorier
                 reinitialiserSurlignageChemin();
 
                 if (chemin2 != null && !chemin2.empty()) {
-                    for (Edge e : chemin2.getEdgeSet()) {
+                    for (Edge e : chemin2.getEdgePath()) {
                         e.setAttribute("ui.style", "fill-color: rgb(148,0,211); size: 4px;");
                     }
                 }
 
-                
                 if (chemin2 == null || chemin2.empty()) {
                     resultat = resultat + "Aucun chemin (routes peu fiables bloquees)";
                 } else {
                     double totalEstimee = 0;
-                    for (Edge e : chemin2.getEdgeSet()) {
-                        double duree     = (double) e.getAttribute("duree");
+                    for (Edge e : chemin2.getEdgePath()) {
+                        double duree = (double) e.getAttribute("duree");
                         double fiabilite = (double) e.getAttribute("fiabilite");
                         totalEstimee += duree * (20 - fiabilite * 10) / 10.0;
                     }
-                    resultat = resultat + "Le chemin le plus sûr a une ";
-                    resultat = resultat + "durée estimee de : " + String.format("%.0f", totalEstimee) + " min";
+                    resultat = resultat + "Le chemin le plus sur a une ";
+                    resultat = resultat + "duree estimee de : " + String.format("%.0f", totalEstimee) + " min";
                 }
 
                 lblStatut.setText(" Itineraire calcule : " + resultat);
@@ -618,8 +591,6 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Ouvre une fenetre avec les informations du centre clique (clic droit).
-     * Delegue a FenetreInfosCentre pour les details (distances, plus proches
-     * centres par type, etc. - cf. Q5).
      * @param nodeId Identifiant du sommet clique (ex: "S1")
      */
     private void ouvrirInfosCentre(String nodeId) {
