@@ -90,12 +90,12 @@ public class FenetreInfosCentre extends JDialog {
         panneauHaut.add(new JLabel("Centre de nutrition le plus proche : " + textePlusProche("centre")), gc);
 
         JTabbedPane onglets = new JTabbedPane();
-        onglets.add("Distances maternites", new JScrollPane(creerTable("maternite", "distance", "Distance (km)")));
-        onglets.add("Distances blocs", new JScrollPane(creerTable("bloc", "distance", "Distance (km)")));
-        onglets.add("Distances nutrition", new JScrollPane(creerTable("centre", "distance", "Distance (km)")));
-        onglets.add("Durees maternites", new JScrollPane(creerTable("maternite", "duree", "Duree (min)")));
-        onglets.add("Durees blocs", new JScrollPane(creerTable("bloc", "duree", "Duree (min)")));
-        onglets.add("Durees nutrition", new JScrollPane(creerTable("centre", "duree", "Duree (min)")));
+        onglets.add("Distances maternites", new JScrollPane(creerTable("M", "distance", "Distance (km)")));
+        onglets.add("Distances blocs", new JScrollPane(creerTable("O", "distance", "Distance (km)")));
+        onglets.add("Distances nutrition", new JScrollPane(creerTable("N", "distance", "Distance (km)")));
+        onglets.add("Durees maternites", new JScrollPane(creerTable("M", "duree", "Duree (min)")));
+        onglets.add("Durees blocs", new JScrollPane(creerTable("O", "duree", "Duree (min)")));
+        onglets.add("Durees nutrition", new JScrollPane(creerTable("N", "duree", "Duree (min)")));
 
         panneauPrincipal.add(panneauHaut, BorderLayout.NORTH);
         panneauPrincipal.add(onglets, BorderLayout.CENTER);

@@ -28,9 +28,9 @@ public class GenGraphe {
 
     /** Stylesheet commun pour la coloration des sommets et des aretes risquees. */
     private static final String STYLESHEET =
-            "node.maternite { fill-color: red; size: 20px; } " +
-            "node.bloc { fill-color: blue; size: 20px; } " +
-            "node.centre { fill-color: green; size: 20px; } " +
+            "node.M { fill-color: red; size: 20px; } " +
+            "node.O { fill-color: blue; size: 20px; } " +
+            "node.N { fill-color: green; size: 20px; } " +
             "edge.risquee { fill-color: red; size: 3px; } " +
             "edge { fill-color: black; size: 1px; } " ;
 
@@ -104,18 +104,18 @@ public class GenGraphe {
             if (tirage <= PROBA_MATERNITE) {
                 nbMaternite++;
                 node = carteDistrict.addNode("M" + nbMaternite);
-                node.setAttribute("ui.class", "maternite");
-                node.setAttribute("type", "maternite");
+                node.setAttribute("ui.class", "M");
+                node.setAttribute("type", "M");
             } else if (tirage <= PROBA_MATERNITE + PROBA_AUTRE) {
                 nbBloc++;
-                node = carteDistrict.addNode("BO" + nbBloc);
-                node.setAttribute("ui.class", "bloc");
-                node.setAttribute("type", "bloc");
+                node = carteDistrict.addNode("O" + nbBloc);
+                node.setAttribute("ui.class", "O");
+                node.setAttribute("type", "O");
             } else {
                 nbCentre++;
-                node = carteDistrict.addNode("CN" + nbCentre);
-                node.setAttribute("ui.class", "centre");
-                node.setAttribute("type", "centre");
+                node = carteDistrict.addNode("N" + nbCentre);
+                node.setAttribute("ui.class", "N");
+                node.setAttribute("type", "N");
             }
             node.setAttribute("ui.label", node.getId());
         }
@@ -185,16 +185,16 @@ public class GenGraphe {
 
                 switch (typeSommet) {
                     case "M":
-                        noeud.setAttribute("ui.class", "maternite");
-                        noeud.setAttribute("type", "maternite");
+                        noeud.setAttribute("ui.class", "M");
+                        noeud.setAttribute("type", "M");
                         break;
                     case "O":
-                        noeud.setAttribute("ui.class", "bloc");
-                        noeud.setAttribute("type", "bloc");
+                        noeud.setAttribute("ui.class", "B");
+                        noeud.setAttribute("type", "B");
                         break;
                     case "N":
-                        noeud.setAttribute("ui.class", "centre");
-                        noeud.setAttribute("type", "centre");
+                        noeud.setAttribute("ui.class", "C");
+                        noeud.setAttribute("type", "C");
                         break;
                     default:
                         noeud.setAttribute("type", "inconnu");
@@ -348,6 +348,6 @@ public class GenGraphe {
         dijkstra.compute();
         return dijkstra.getPath(graphe.getNode(idFin));
     }
-
-
+    
+    
 }

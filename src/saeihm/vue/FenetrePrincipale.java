@@ -15,6 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
+import saeihm.modele.Algo;
 
 import saeihm.modele.GenGraphe;
 
@@ -26,10 +27,10 @@ import saeihm.modele.GenGraphe;
  */
 public class FenetrePrincipale extends JFrame {
 
-    private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt;
+    private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt, btCalculerTournee;
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
-    private JComboBox<String> cbDepart, cbArrivee;
+    private JComboBox<String> cbDepart, cbArrivee, cbCentres;
     private JTextArea zoneResultat;
     private JPanel panneauGraphe;
     private JPanel panneauStats;
@@ -220,14 +221,16 @@ public class FenetrePrincipale extends JFrame {
         gct.insets = new Insets(5, 2, 5, 2);
         gct.fill = GridBagConstraints.NONE;
 
+        
+        
         JComboBox cbCamion = new JComboBox();
-        cbCamion.addItem("Camion 1");
-        cbCamion.addItem("Camion 2");
+        cbCamion.addItem("1");
+        cbCamion.addItem("2");
 
         gct.anchor = GridBagConstraints.LINE_START;
         gct.gridx = 0;
         gct.gridy = 0;
-        JLabel jCamion = new JLabel("Choix camion :");
+        JLabel jCamion = new JLabel("Choix du nombre de camion(s) :");
         panneauTournee.add(jCamion, gct);
 
         gct.anchor = GridBagConstraints.CENTER;
@@ -244,19 +247,19 @@ public class FenetrePrincipale extends JFrame {
         gct.anchor = GridBagConstraints.CENTER;
         gct.gridx = 1;
         gct.gridy = 1;
-        JComboBox cbCentres = new JComboBox();
+        cbCentres = new JComboBox();
         cbCentres.addItem("Tous");
-        cbCentres.addItem("Centres M");
-        cbCentres.addItem("Centres O");
-        cbCentres.addItem("Centres N");
+        cbCentres.addItem("M");
+        cbCentres.addItem("O");
+        cbCentres.addItem("N");
         panneauTournee.add(cbCentres, gct);
-
+        
+        
         gct.fill = GridBagConstraints.BOTH;
         gct.gridx = 0;
         gct.gridwidth = 2;
         gct.gridy = 2;
-        JButton btCalculerTournee = new JButton("Calculer Tournee");
-        btCalculerTournee.setEnabled(false);
+        btCalculerTournee = new JButton("Calculer Tournee");
         panneauTournee.add(btCalculerTournee, gct);
 
         gbcDroite.gridy = 3;
@@ -295,6 +298,7 @@ public class FenetrePrincipale extends JFrame {
         lblNbBloc.setForeground(new Color(0, 0, 200));
         lblNbCentre.setForeground(new Color(0, 140, 0));
     }
+    
 
     /**
      * Branche les ecouteurs d'evenements sur les boutons et cases a cocher.
@@ -313,6 +317,17 @@ public class FenetrePrincipale extends JFrame {
                 Graph carte = GenGraphe.chargerGraphe(chemin);
                 afficherGraphe(carte);
             }
+        });
+        
+        btCalculerTournee.addActionListener(e -> {               
+          String type = (String) cbCentres.getSelectedItem() ;  
+          Path p2 = Algo.tourneeLivraisonFiltrage(grapheCourant, type) ;
+         // Path p2 = Algo.tourneeLivraisonTotale(grapheCourant) ;
+          for(Node n : p2.getEachNode()){         
+              System.out.println(n.getId());
+              
+          }
+           
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
