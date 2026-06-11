@@ -189,12 +189,12 @@ public class GenGraphe {
                         noeud.setAttribute("type", "M");
                         break;
                     case "O":
-                        noeud.setAttribute("ui.class", "B");
-                        noeud.setAttribute("type", "B");
+                        noeud.setAttribute("ui.class", "O");
+                        noeud.setAttribute("type", "O");
                         break;
                     case "N":
-                        noeud.setAttribute("ui.class", "C");
-                        noeud.setAttribute("type", "C");
+                        noeud.setAttribute("ui.class", "N");
+                        noeud.setAttribute("type", "N");
                         break;
                     default:
                         noeud.setAttribute("type", "inconnu");
