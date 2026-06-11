@@ -274,17 +274,21 @@ public class FenetrePrincipale extends JFrame {
         contenu.add(lblStatut, BorderLayout.SOUTH);
         this.setContentPane(contenu);
 
-        btGenerer.setBackground(new Color(76, 175, 80));
-        btGenerer.setForeground(Color.WHITE);
+        btGenerer.setBackground(Color.GREEN);
+        btGenerer.setForeground(Color.BLACK);
         btGenerer.setFocusPainted(false);
 
-        btCharger.setBackground(new Color(33, 150, 243));
-        btCharger.setForeground(Color.WHITE);
+        btCharger.setBackground(Color.CYAN);
+        btCharger.setForeground(Color.BLACK);
         btCharger.setFocusPainted(false);
 
-        btRoutesRisquees.setBackground(new Color(244, 67, 54));
-        btRoutesRisquees.setForeground(Color.WHITE);
+        btRoutesRisquees.setBackground(Color.LIGHT_GRAY);
+        btRoutesRisquees.setForeground(Color.BLACK);
         btRoutesRisquees.setFocusPainted(false);
+        
+        if (btRoutesRisquees.isEnabled()) {
+            btRoutesRisquees.setForeground(Color.BLACK);
+        }
 
         btGenerer.setToolTipText("Genere un graphe avec un nombre de centres choisi");
         btCharger.setToolTipText("Charge un graphe depuis un fichier CSV");
@@ -294,9 +298,9 @@ public class FenetrePrincipale extends JFrame {
 
         panneauStats.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)), "Statistiques", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
 
-        lblNbMaternite.setForeground(new Color(200, 0, 0));
-        lblNbBloc.setForeground(new Color(0, 0, 200));
-        lblNbCentre.setForeground(new Color(0, 140, 0));
+        lblNbMaternite.setForeground(Color.RED);
+        lblNbBloc.setForeground(Color.BLUE);
+        lblNbCentre.setForeground(Color.ORANGE);
     }
     
 
@@ -396,9 +400,9 @@ public class FenetrePrincipale extends JFrame {
      */
     private void majCompteurs() {
         if (grapheCourant != null) {
-            int nbM = GenGraphe.compterSommetsParType(grapheCourant, "maternite");
-            int nbO = GenGraphe.compterSommetsParType(grapheCourant, "bloc");
-            int nbN = GenGraphe.compterSommetsParType(grapheCourant, "centre");
+            int nbM = GenGraphe.compterSommetsParType(grapheCourant, "M");
+            int nbO = GenGraphe.compterSommetsParType(grapheCourant, "O");
+            int nbN = GenGraphe.compterSommetsParType(grapheCourant, "N");
             lblNbMaternite.setText("Maternites (M) : " + nbM);
             lblNbBloc.setText("Blocs operatoires (O) : " + nbO);
             lblNbCentre.setText("Centres de nutrition (N) : " + nbN);

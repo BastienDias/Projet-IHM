@@ -83,11 +83,11 @@ public class FenetreInfosCentre extends JDialog {
         gc.gridy = 1;
         panneauHaut.add(new JLabel("Type du centre : " + type), gc);
         gc.gridy = 2;
-        panneauHaut.add(new JLabel("Maternite la plus proche : " + textePlusProche("maternite")), gc);
+        panneauHaut.add(new JLabel("Maternite la plus proche : " + textePlusProche("M")), gc);
         gc.gridy = 3;
-        panneauHaut.add(new JLabel("Bloc operatoire le plus proche : " + textePlusProche("bloc")), gc);
+        panneauHaut.add(new JLabel("Bloc operatoire le plus proche : " + textePlusProche("O")), gc);
         gc.gridy = 4;
-        panneauHaut.add(new JLabel("Centre de nutrition le plus proche : " + textePlusProche("centre")), gc);
+        panneauHaut.add(new JLabel("Centre de nutrition le plus proche : " + textePlusProche("N")), gc);
 
         JTabbedPane onglets = new JTabbedPane();
         onglets.add("Distances maternites", new JScrollPane(creerTable("M", "distance", "Distance (km)")));
