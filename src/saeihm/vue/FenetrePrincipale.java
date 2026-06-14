@@ -331,6 +331,8 @@ public class FenetrePrincipale extends JFrame {
               System.out.println(n.getId());
               
           }
+          
+            System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
            
         });
 

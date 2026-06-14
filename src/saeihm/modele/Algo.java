@@ -40,12 +40,12 @@ public class Algo {
     public static Path tourneeLivraisonTotale(Graph g){
         List<Node> aVisiter = new ArrayList<>();
         Path tournee = new Path();
-        Node courant = g.getNode(0);
+        Node courant = g.getNode("S1");
         tournee.setRoot(courant);
         
         //Ajout de tous les sommets du graphe sauf celui de départ
         for (int i = 1; i < g.getNodeCount(); i++) {
-            aVisiter.add(g.getNode(i));
+            aVisiter.add(g.getNode("S"+i));
         }    
         while(!aVisiter.isEmpty()){
             Node prochainCentre = null;
@@ -69,7 +69,9 @@ public class Algo {
                 for (Edge e : meilleurChemin.getEdgePath()){
                         tournee.add(e); 
                 }
-                aVisiter.remove(prochainCentre);
+                for (Node nTraverse : meilleurChemin.getNodePath()) {
+                    aVisiter.remove(nTraverse);
+                }
                 courant = prochainCentre;
             }
         }
@@ -110,6 +112,16 @@ public class Algo {
             }
         }
         return tournee;
+    }
+    
+    public static double dureeChemin(Path p) {
+        double total = 0;
+        if (p != null) {
+            for (Edge e : p.getEdgePath()) {
+                total += (double) e.getAttribute("duree");
+            }
+        }
+        return total;
     }
 }
    
