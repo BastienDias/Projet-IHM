@@ -10,7 +10,10 @@ import org.graphstream.graph.Node;
 import saeihm.modele.GenGraphe;
 
 /**
- * Fenetre modale d'informations sur un centre clique (Question 5).
+ * Fenetre modale d'informations sur un centre (Question 5).
+ * Ouverte lors d'un clic droit sur un sommet, elle affiche l'identifiant et le
+ * type du centre, le centre le plus proche de chaque type (en duree et duree estimee),
+ * puis six tables : les distances et les durees minimales vers les centres de chaque type.
  */
 public class FenetreInfosCentre extends JDialog {
 
@@ -22,8 +25,8 @@ public class FenetreInfosCentre extends JDialog {
 
     /**
      * Construit et affiche la fenetre d'infos pour un centre.
-     * @param parent Fenetre parente
-     * @param graphe Graphe courant non null
+     * @param parent Fenetre parente, sur laquelle la boite de dialogue est centree
+     * @param graphe Graphe courant (non null)
      * @param idCentre Identifiant du sommet clique
      */
     public FenetreInfosCentre(JFrame parent, Graph graphe, String idCentre) {
@@ -41,9 +44,9 @@ public class FenetreInfosCentre extends JDialog {
     }
 
     /**
-     * Pose l'attribut "dureeEstimee" sur chaque arete a partir de la duree
-     * et de la fiabilite. Une route trop peu fiable (< 0.25) recoit une
-     * valeur tres elevee pour etre evitee par Dijkstra.
+     * Pose l'attribut "dureeEstimee" sur chaque arete a partir de la duree et de la fiabilite.
+     * La formule est duree * (20 - fiabilite*10) / 10 ; une route trop peu fiable (fiabilite < 0.25)
+     * recoit une valeur tres elevee afin d'etre evitee par Dijkstra.
      */
     private void poserDureesEstimees() {
         for (Edge e : graphe.getEachEdge()) {
@@ -60,9 +63,9 @@ public class FenetreInfosCentre extends JDialog {
     }
 
     /**
-     * Met en place les composants : panneau du haut avec id, type et les
-     * trois centres les plus proches par type, puis un JTabbedPane avec
-     * les six tables (distances et durees par type de centre).
+     * Met en place les composants : un panneau haut recapitulant l'id, le type et
+     * le centre le plus proche de chaque type, puis un JTabbedPane contenant les six
+     * tables (distances et durees vers les centres de type M, O et N).
      */
     private void initComposants() {
         Node centre = graphe.getNode(idCentre);
@@ -103,12 +106,13 @@ public class FenetreInfosCentre extends JDialog {
     }
 
     /**
-     * Construit une JTable listant les centres d'un type avec le cout du
-     * chemin le plus court vers eux (un seul Dijkstra par table grace a getPathLength).
-     * @param type Type des centres a lister ("maternite", "bloc", "centre")
+     * Construit une JTable listant les centres d'un type avec le cout du plus court
+     * chemin depuis le centre courant vers chacun d'eux. Un seul Dijkstra est calcule
+     * par table : la lecture du cout vers chaque sommet se fait via getPathLength.
+     * @param type Type des centres a lister ("M", "O" ou "N")
      * @param attribut Attribut a minimiser ("distance" ou "duree")
-     * @param intitule Titre de la deuxieme colonne
-     * @return JTable a deux colonnes : Id et le cout
+     * @param intitule Titre de la deuxieme colonne du tableau
+     * @return JTable a deux colonnes (Id du centre, cout) ; "Aucun chemin" si non atteignable
      */
     private JTable creerTable(String type, String attribut, String intitule) {
         int nb = GenGraphe.compterSommetsParType(graphe, type);
@@ -139,10 +143,11 @@ public class FenetreInfosCentre extends JDialog {
     }
 
     /**
-     * Cherche le centre d'un type donne le plus proche en duree, et renvoie
-     * son id avec sa duree minimale et sa duree estimee.
-     * @param type Type recherche
-     * @return Phrase descriptive du plus proche centre du type, ou "aucun"
+     * Cherche le centre d'un type donne le plus proche en duree depuis le centre courant.
+     * Deux calculs de Dijkstra sont effectues (sur "duree" et sur "dureeEstimee") afin
+     * de renvoyer a la fois la duree minimale et la duree estimee correspondante.
+     * @param type Type recherche ("M", "O" ou "N")
+     * @return Phrase decrivant le centre le plus proche (id, duree, duree estimee), "aucun" si introuvable
      */
     private String textePlusProche(String type) {
         Dijkstra dijkstraDuree = new Dijkstra(Dijkstra.Element.EDGE, null, "duree");

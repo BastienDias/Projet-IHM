@@ -21,18 +21,33 @@ import saeihm.modele.GenGraphe;
 
 /**
  * Fenetre principale de l'application Medic'In.
- * Permet de generer ou charger un graphe de district, de le visualiser
- * directement dans la fenetre via GraphStream, et de consulter les statistiques
- * du graphe (compteurs par type de centre, routes risquees au-dela d'un seuil).
+ * Permet de generer ou charger un graphe de district, de le visualiser directement
+ * dans la fenetre via GraphStream, de consulter les statistiques (compteurs par type,
+ * routes risquees au-dela d'un seuil), de calculer des itineraires entre deux centres
+ * (plus court en duree et plus sur), de consulter les infos d'un centre par clic droit,
+ * et de calculer une tournee de vehicule.
  */
 public class FenetrePrincipale extends JFrame {
 
+    /** Boutons d'action de la barre superieure et des panneaux lateraux. */
     private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt, btCalculerTournee;
+
+    /** Labels des compteurs par type de centre et barre de statut en bas de fenetre. */
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
+
+    /** Cases a cocher des preferences d'affichage (infos sur les routes, labels des sommets). */
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
+
+    /** Listes deroulantes : sommets de depart/arrivee d'un itineraire et type de centre pour la tournee. */
     private JComboBox<String> cbDepart, cbArrivee, cbCentres;
+
+    /** Zone de texte de resultats (non utilisee dans l'affichage actuel). */
     private JTextArea zoneResultat;
+
+    /** Panneau central accueillant la vue GraphStream. */
     private JPanel panneauGraphe;
+
+    /** Panneau lateral des statistiques. */
     private JPanel panneauStats;
 
     /** Graphe actuellement affiche. Null tant qu'aucun graphe n'a ete charge. */
@@ -47,7 +62,9 @@ public class FenetrePrincipale extends JFrame {
     /**
      * Construit et affiche la fenetre principale.
      * Le viewer GraphStream est utilise en mode integre pour afficher le rendu
-     * directement dans un JPanel plutot que dans une fenetre separee.
+     * directement dans un JPanel plutot que dans une fenetre separee. La propriete
+     * systeme du renderer J2D est positionnee ici car elle est necessaire pour que
+     * la detection des clics sur les sommets fonctionne.
      */
     public FenetrePrincipale() {
         super("Medic'In");
@@ -66,10 +83,9 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Initialise la disposition des composants.
-     * En haut : bandeau d'actions (generer / charger / routes risquees).
+     * En haut : bandeau d'actions (generer / charger / routes risquees) avec le logo.
      * Au centre : panneau qui accueillera la vue GraphStream.
-     * A droite : panneau d'informations affichant les compteurs M/O/N
-     * et le panneau de preferences d'affichage.
+     * A droite : panneaux empiles (statistiques, affichage, itineraire, tournee).
      * En bas : barre de statut.
      */
     private void initComposants() {
@@ -121,7 +137,7 @@ public class FenetrePrincipale extends JFrame {
         contraintesStats.gridy = 2;
         panneauStats.add(lblNbCentre, contraintesStats);
 
-        // Panneau Affichage
+        // Panneau Affichage : cases a cocher des informations a afficher sur les routes
         JPanel panneauAffichage = new JPanel(new GridBagLayout());
         panneauAffichage.setBorder(BorderFactory.createTitledBorder("Affichage"));
         GridBagConstraints contraintesAff = new GridBagConstraints();
@@ -143,7 +159,7 @@ public class FenetrePrincipale extends JFrame {
         contraintesAff.gridy = 3;
         panneauAffichage.add(cbLabelsSommets, contraintesAff);
 
-        // Panneau Itineraire
+        // Panneau Itineraire : selection depart/arrivee et boutons de calcul de chemin
         JPanel panneauItineraire = new JPanel(new GridBagLayout());
         panneauItineraire.setBorder(BorderFactory.createTitledBorder("Itineraire"));
         GridBagConstraints gciti = new GridBagConstraints();
@@ -197,7 +213,7 @@ public class FenetrePrincipale extends JFrame {
         gciti.fill = GridBagConstraints.HORIZONTAL;
         panneauItineraire.add(btCheminLePlusSur, gciti);
 
-        // Empilement vertical : Statistiques, Affichage, Itineraire
+        // Empilement vertical du panneau de droite : Statistiques, Affichage, Itineraire
         JPanel panneauDroite = new JPanel(new GridBagLayout());
         GridBagConstraints gbcDroite = new GridBagConstraints();
         gbcDroite.gridx = 0;
@@ -214,15 +230,13 @@ public class FenetrePrincipale extends JFrame {
         gbcDroite.fill = GridBagConstraints.BOTH;
         panneauDroite.add(panneauItineraire, gbcDroite);
 
-        // Question 6 IHM : panneau tournee
+        // Panneau Tournee (Question 6) : choix du nombre de camions et du type de centres a livrer
         JPanel panneauTournee = new JPanel(new GridBagLayout());
         panneauTournee.setBorder(BorderFactory.createTitledBorder("Tournee de vehicule"));
         GridBagConstraints gct = new GridBagConstraints();
         gct.insets = new Insets(5, 2, 5, 2);
         gct.fill = GridBagConstraints.NONE;
 
-        
-        
         JComboBox cbCamion = new JComboBox();
         cbCamion.addItem("1");
         cbCamion.addItem("2");
@@ -253,8 +267,7 @@ public class FenetrePrincipale extends JFrame {
         cbCentres.addItem("O");
         cbCentres.addItem("N");
         panneauTournee.add(cbCentres, gct);
-        
-        
+
         gct.fill = GridBagConstraints.BOTH;
         gct.gridx = 0;
         gct.gridwidth = 2;
@@ -274,6 +287,7 @@ public class FenetrePrincipale extends JFrame {
         contenu.add(lblStatut, BorderLayout.SOUTH);
         this.setContentPane(contenu);
 
+        // Mise en forme des boutons (couleurs et survol)
         btGenerer.setBackground(Color.GREEN);
         btGenerer.setForeground(Color.BLACK);
         btGenerer.setFocusPainted(false);
@@ -285,7 +299,7 @@ public class FenetrePrincipale extends JFrame {
         btRoutesRisquees.setBackground(Color.LIGHT_GRAY);
         btRoutesRisquees.setForeground(Color.BLACK);
         btRoutesRisquees.setFocusPainted(false);
-        
+
         if (btRoutesRisquees.isEnabled()) {
             btRoutesRisquees.setForeground(Color.BLACK);
         }
@@ -302,10 +316,11 @@ public class FenetrePrincipale extends JFrame {
         lblNbBloc.setForeground(Color.BLUE);
         lblNbCentre.setForeground(Color.ORANGE);
     }
-    
 
     /**
-     * Branche les ecouteurs d'evenements sur les boutons et cases a cocher.
+     * Branche les ecouteurs d'evenements sur les boutons et les cases a cocher.
+     * Gere la generation, le chargement, le calcul de tournee, l'affichage des routes
+     * risquees, les deux types d'itineraire, ainsi que la mise a jour de l'affichage.
      */
     private void initActions() {
         btGenerer.addActionListener(e -> {
@@ -322,18 +337,14 @@ public class FenetrePrincipale extends JFrame {
                 afficherGraphe(carte);
             }
         });
-        
-        btCalculerTournee.addActionListener(e -> {               
-          String type = (String) cbCentres.getSelectedItem() ;  
-          Path p2 = Algo.tourneeLivraisonFiltrage(grapheCourant, type) ;
-         // Path p2 = Algo.tourneeLivraisonTotale(grapheCourant) ;
-          for(Node n : p2.getEachNode()){         
-              System.out.println(n.getId());
-              
-          }
-          
+
+        btCalculerTournee.addActionListener(e -> {
+            String type = (String) cbCentres.getSelectedItem();
+            Path p2 = Algo.tourneeLivraisonFiltrage(grapheCourant, type);
+            for (Node n : p2.getEachNode()) {
+                System.out.println(n.getId());
+            }
             System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
-           
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
@@ -350,7 +361,11 @@ public class FenetrePrincipale extends JFrame {
 
     /**
      * Affiche le graphe passe en parametre dans le panneau central.
-     * @param graphe Graphe a afficher. Si null, la methode sort immediatement.
+     * Ferme le viewer precedent s'il existe, cree une nouvelle vue GraphStream avec
+     * auto-layout, branche la detection des clics sur les sommets (clic gauche pour
+     * selectionner, clic droit pour ouvrir les infos du centre), met a jour les
+     * compteurs, les preferences d'affichage et les listes deroulantes.
+     * @param graphe Graphe a afficher ; si null, la methode sort immediatement
      */
     private void afficherGraphe(Graph graphe) {
         if (graphe == null) return;
@@ -398,7 +413,8 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Met a jour les trois labels de compteurs en interrogeant GenGraphe.
+     * Met a jour les trois labels de compteurs (M, O, N) en interrogeant GenGraphe.
+     * Ne fait rien tant qu'aucun graphe n'est charge.
      */
     private void majCompteurs() {
         if (grapheCourant != null) {
@@ -412,8 +428,10 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Demande un seuil de fiabilite a l'utilisateur via une boite de dialogue,
-     * puis colore en rouge les aretes du graphe dont la fiabilite est strictement inferieure.
+     * Demande un seuil de fiabilite via une boite de dialogue, valide la saisie,
+     * puis met en evidence les routes dont la fiabilite est strictement inferieure
+     * au seuil. Le nombre de routes risquees est affiche dans la barre de statut.
+     * Sort sans rien faire si aucun graphe n'est charge ou si l'utilisateur annule.
      */
     private void demanderEtAfficherRoutesRisquees() {
         if (grapheCourant == null) return;
@@ -443,7 +461,9 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Repropage les preferences d'affichage cochees vers le graphe courant.
+     * Repropage vers le graphe courant les preferences d'affichage cochees
+     * (fiabilite, distance, duree sur les routes ; identifiants des sommets).
+     * Ne fait rien tant qu'aucun graphe n'est charge.
      */
     private void appliquerPreferencesAffichage() {
         if (grapheCourant != null) {
@@ -456,8 +476,8 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Affiche une boite de dialogue demandant le nombre de sommets puis construit
-     * un graphe aleatoire de cette taille via GenGraphe.
+     * Affiche une boite de dialogue demandant le nombre de sommets, valide la saisie,
+     * puis construit un graphe aleatoire de cette taille via GenGraphe.
      * @return Le graphe genere, ou null si l'utilisateur annule ou saisit une valeur invalide
      */
     private Graph demanderNbSommets() {
@@ -485,7 +505,8 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Remplit les combo boxes depart/arrivee avec les ids de tous les sommets du graphe courant.
+     * Remplit les listes deroulantes depart et arrivee avec les identifiants de tous
+     * les sommets du graphe courant, puis active les boutons de calcul d'itineraire.
      */
     private void populerCombos() {
         cbDepart.removeAllItems();
@@ -499,7 +520,8 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Retire le surlignage (ui.style) de toutes les aretes du graphe courant.
+     * Reinitialise l'apparence (ui.style) de toutes les aretes du graphe courant
+     * en noir fin, afin d'effacer le surlignage d'un itineraire precedemment affiche.
      */
     private void reinitialiserSurlignageChemin() {
         if (grapheCourant != null) {
@@ -510,9 +532,9 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Convertit un Path GraphStream en chaine lisible "S1 -> S3 -> S5".
+     * Convertit un Path GraphStream en chaine lisible de la forme "S1 -> S3 -> S5".
      * @param chemin Path a convertir (non null)
-     * @return Chaine representant la sequence de sommets
+     * @return Chaine representant la sequence ordonnee des sommets du chemin
      */
     private String cheminToString(Path chemin) {
         String sb = "";
@@ -526,8 +548,10 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Calcule et affiche le chemin le plus court (duree minimale) entre les
-     * centres selectionnes dans les combo boxes.
+     * Calcule et affiche le chemin le plus court en duree entre les centres selectionnes
+     * dans les listes deroulantes. Le chemin trouve est surligne en orange sur la carte
+     * et sa duree totale est affichee dans la barre de statut. Avertit l'utilisateur si
+     * les deux centres sont identiques ou non selectionnes.
      */
     private void calculerEtAfficherCheminPlusCourt() {
         if (grapheCourant != null) {
@@ -568,8 +592,10 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Calcule et affiche le chemin le plus sur (penalise par la fiabilite) entre les
-     * centres selectionnes.
+     * Calcule et affiche le chemin le plus sur (duree ponderee par la fiabilite) entre
+     * les centres selectionnes. Le chemin trouve est surligne en violet sur la carte et
+     * sa duree estimee est affichee dans la barre de statut. Avertit l'utilisateur si
+     * les deux centres sont identiques ou non selectionnes.
      */
     private void calculerEtAfficherCheminPlusSur() {
         if (grapheCourant != null) {
@@ -611,8 +637,9 @@ public class FenetrePrincipale extends JFrame {
     }
 
     /**
-     * Ouvre une fenetre avec les informations du centre clique (clic droit).
-     * @param nodeId Identifiant du sommet clique (ex: "S1")
+     * Ouvre une fenetre modale avec les informations du centre clique (clic droit).
+     * Ne fait rien si aucun graphe n'est charge ou si le sommet n'existe pas.
+     * @param nodeId Identifiant du sommet clique (ex : "S1")
      */
     private void ouvrirInfosCentre(String nodeId) {
         if (grapheCourant == null) return;

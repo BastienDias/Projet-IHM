@@ -14,7 +14,19 @@ import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 
 /**
- * Cette classe permet d'initialiser un graphe aléatoire ou par lecture de fichier csv
+ * Classe utilitaire de generation et de manipulation du graphe de district Medic'In.
+ * Elle regroupe la creation d'un graphe aleatoire, le chargement d'un graphe
+ * depuis un fichier CSV, ainsi que des operations d'analyse et d'affichage
+ * (comptage par type, marquage des routes risquees, calculs de plus court chemin).
+ * Toutes les methodes sont statiques : la classe n'est pas destinee a etre instanciee.
+ *
+ * <p>Conventions utilisees dans tout le graphe :</p>
+ * <ul>
+ *   <li>chaque sommet porte un attribut "type" valant "M", "O" ou "N" ;</li>
+ *   <li>chaque arete porte les attributs "fiabilite" (0.2 a 1.0), "distance" (km)
+ *       et "duree" (min).</li>
+ * </ul>
+ *
  * @author Bastien Dias
  */
 public class GenGraphe {
@@ -22,21 +34,21 @@ public class GenGraphe {
     /** Probabilite qu'un sommet tire au hasard soit une maternite (M). */
     private static final double PROBA_MATERNITE = 0.60;
 
-    /** Probabilite qu'un sommet tire au hasard soit un bloc operatoire (O).
-     *  La proba d'etre un centre de nutrition est 1 - PROBA_MATERNITE - PROBA_AUTRE. */
+    /**
+     * Probabilite qu'un sommet tire au hasard soit un bloc operatoire (O).
+     * Cette meme valeur sert aussi de probabilite d'apparition d'une route.
+     * La probabilite d'etre un centre de nutrition (N) vaut
+     * 1 - PROBA_MATERNITE - PROBA_AUTRE.
+     */
     private static final double PROBA_AUTRE = 0.20;
 
-    /** Stylesheet commun pour la coloration des sommets et des aretes risquees. */
+    /** Feuille de style GraphStream commune : couleurs des sommets par type et aspect des aretes. */
     private static final String STYLESHEET =
             "node.M { fill-color: red; size: 20px; } " +
             "node.O { fill-color: blue; size: 20px; } " +
             "node.N { fill-color: green; size: 20px; } " +
             "edge.risquee { fill-color: red; size: 3px; } " +
             "edge { fill-color: black; size: 1px; } " ;
-
-    /**
-     * Constructeur prive : classe utilitaire non instanciable.
-     */
 
     /**
      * Initialise la fiabilite d'une route avec une valeur aleatoire dans [0.2 ; 1.0].
@@ -86,11 +98,12 @@ public class GenGraphe {
     /**
      * Genere un graphe aleatoire de nbSommets sommets.
      * Chaque sommet est tire au sort comme maternite (proba 0.60), bloc operatoire (0.20)
-     * ou centre de nutrition (0.20). Une arete est ajoutee entre deux sommets avec
-     * une probabilite egale a PROBA_AUTRE. Chaque arete recoit une fiabilite,
-     * une distance et une duree aleatoires.
+     * ou centre de nutrition (0.20). Le graphe est d'abord rendu connexe en reliant
+     * chaque nouveau sommet a un sommet deja place, puis des aretes supplementaires
+     * sont ajoutees entre deux sommets quelconques avec une probabilite de PROBA_AUTRE.
+     * Chaque arete recoit une fiabilite, une distance et une duree aleatoires.
      * @param nbSommets Nombre de sommets souhaite pour la creation du graphe
-     * @return carteDistrict : Un graphe de nbSommets avec ses routes initialisees
+     * @return carteDistrict : un graphe de nbSommets sommets avec ses routes initialisees
      */
     public static Graph construireGrapheAleatoire(int nbSommets) {
         Graph carteDistrict = new SingleGraph("carte");
@@ -120,7 +133,7 @@ public class GenGraphe {
             node.setAttribute("ui.label", node.getId());
         }
 
-        //Ajoute une arrête entre deux sommets aléatoirement pour assurer un graphe connexe
+        // Relie chaque nouveau sommet a un sommet deja place : garantit un graphe connexe
         List<Node> nodesAjoutes = new ArrayList<>();
         nodesAjoutes.add(carteDistrict.getNode(0));
         for (int i = 1; i < carteDistrict.getNodeCount(); i++) {
@@ -135,14 +148,14 @@ public class GenGraphe {
             nodesAjoutes.add(nodeI);
         }
 
-        //Ajoute des arrêtes entre les sommets aléatoirement avec une probabilité de 1/5
+        // Ajoute des routes supplementaires entre sommets non encore relies (proba 1/5)
         for (int j = 0; j < carteDistrict.getNodeCount(); j++) {
             for (int k = j + 1; k < carteDistrict.getNodeCount(); k++) {
                 Node nodeJ = carteDistrict.getNode(j);
                 Node nodeK = carteDistrict.getNode(k);
                 if (!nodeJ.hasEdgeBetween(nodeK) && rand.nextDouble() <= PROBA_AUTRE) {
                     nbRoute++;
-                    Edge e = carteDistrict.addEdge("Route" + nbRoute,nodeJ.getId(), nodeK.getId());
+                    Edge e = carteDistrict.addEdge("Route" + nbRoute, nodeJ.getId(), nodeK.getId());
                     setFiabiliteRoute(e, rand);
                     setDistanceRoute(e, rand);
                     setDureeRoute(e, rand);
@@ -155,11 +168,13 @@ public class GenGraphe {
 
     /**
      * Charge un graphe depuis un fichier CSV au format matrice d'adjacence triangulaire.
-     * Chaque ligne represente un sommet et ses aretes vers les sommets precedents.
-     * Les lignes commencant par "//" sont des commentaires et sont ignorees.
-     * Une cellule a "0" indique l'absence d'arete, sinon elle contient "fiabilite,distance,duree".
-     * @param cheminFichier Chemin absolu vers le fichier CSV a lire
-     * @return carteDistrict : Graphe construit depuis le fichier CSV
+     * Chaque ligne represente un sommet (id ; type ; cellules vers les sommets precedents).
+     * Les lignes vides et celles commencant par "//" sont ignorees.
+     * Une cellule a "0" indique l'absence d'arete, sinon elle contient "fiabilite,distance,duree"
+     * ou la fiabilite est un entier sur 10 (converti en 0.0-1.0).
+     * Les valeurs non analysables sont signalees sur la sortie d'erreur sans interrompre la lecture.
+     * @param cheminFichier Chemin du fichier CSV a lire
+     * @return carteDistrict : graphe construit depuis le fichier (graphe vide en cas d'erreur d'ouverture)
      */
     public static Graph chargerGraphe(String cheminFichier) {
         Graph carteDistrict = new SingleGraph("carte");
@@ -238,9 +253,9 @@ public class GenGraphe {
 
     /**
      * Compte le nombre de sommets d'un type donne dans le graphe.
-     * Le type est lu depuis l'attribut "type" pose au moment de la construction.
+     * Le type est lu depuis l'attribut "type" pose a la construction du graphe.
      * @param graphe Graphe a analyser (ne doit pas etre null)
-     * @param type Type recherche : "maternite", "bloc" ou "centre"
+     * @param type Type recherche : "M" (maternite), "O" (bloc operatoire) ou "N" (centre de nutrition)
      * @return Nombre de sommets correspondant au type, 0 si aucun
      */
     public static int compterSommetsParType(Graph graphe, String type) {
@@ -258,7 +273,7 @@ public class GenGraphe {
      * Met en evidence les routes risquees du graphe.
      * Une route est consideree risquee si sa fiabilite est strictement inferieure au seuil.
      * Les aretes risquees recoivent la ui.class "risquee" (affichage rouge epais),
-     * les autres voient leur ui.class reinitialisee.
+     * les autres voient leur ui.class retiree.
      * @param graphe Graphe a analyser
      * @param seuil  Seuil de fiabilite dans ]0 ; 1] : toute route en-dessous est risquee
      * @return Nombre de routes identifiees comme risquees
@@ -279,11 +294,11 @@ public class GenGraphe {
         return nbRisquees;
     }
 
-        /**
+    /**
      * Met a jour l'affichage des labels du graphe selon les preferences utilisateur.
      * Les attributs metier (fiabilite, distance, duree, type) ne sont jamais modifies :
      * seuls les ui.label de chaque sommet et de chaque arete sont reconstruits.
-     * Une arete sans aucune info cochee voit son ui.label vide ("").
+     * Une arete dont aucune info n'est cochee voit son ui.label vide ("").
      * @param graphe Graphe a mettre a jour (non null)
      * @param afficherFiabilite Si vrai, la fiabilite apparait sur chaque arete
      * @param afficherDistance  Si vrai, la distance apparait sur chaque arete
@@ -293,7 +308,7 @@ public class GenGraphe {
     public static void majAffichage(Graph graphe, boolean afficherFiabilite, boolean afficherDistance, boolean afficherDuree, boolean afficherLabelsSommets) {
         // Sommets : on affiche l'identifiant ou une chaine vide
         for (Node n : graphe) {
-            if(afficherLabelsSommets == true ) {
+            if (afficherLabelsSommets == true) {
                 n.setAttribute("ui.label", n.getId());
             } else {
                 n.setAttribute("ui.label", "");
@@ -321,7 +336,15 @@ public class GenGraphe {
         }
     }
 
-    public static Path plusCourtChemin(Graph graphe, String idDebut, String idFin){
+    /**
+     * Calcule le plus court chemin en duree entre deux sommets via l'algorithme de Dijkstra.
+     * Le cout minimise est l'attribut "duree" des aretes.
+     * @param graphe Graphe sur lequel calculer (non null)
+     * @param idDebut Identifiant du sommet de depart
+     * @param idFin Identifiant du sommet d'arrivee
+     * @return Le chemin trouve ; un Path vide si aucun chemin n'existe entre les deux sommets
+     */
+    public static Path plusCourtChemin(Graph graphe, String idDebut, String idFin) {
         Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "duree");
         dijkstra.init(graphe);
         dijkstra.setSource(graphe.getNode(idDebut));
@@ -330,7 +353,17 @@ public class GenGraphe {
         return chemin;
     }
 
-    public static Path cheminPlusSur(Graph graphe, String idDebut, String idFin){
+    /**
+     * Calcule le chemin le plus sur entre deux sommets en ponderant la duree par la fiabilite.
+     * Chaque arete recoit un attribut temporaire "dureeEstimee" = duree * (20 - fiabilite*10) / 10.
+     * Les routes dont la fiabilite est inferieure a 0.25 recoivent une duree estimee tres elevee
+     * afin d'etre evitees par Dijkstra. Le cout minimise est ensuite "dureeEstimee".
+     * @param graphe Graphe sur lequel calculer (non null)
+     * @param idDebut Identifiant du sommet de depart
+     * @param idFin Identifiant du sommet d'arrivee
+     * @return Le chemin le plus sur ; un Path vide si aucun chemin praticable n'existe
+     */
+    public static Path cheminPlusSur(Graph graphe, String idDebut, String idFin) {
         for (Edge e : graphe.getEachEdge()) {
             double fiabilite = (double) e.getAttribute("fiabilite");
             double duree     = (double) e.getAttribute("duree");
@@ -338,7 +371,7 @@ public class GenGraphe {
             if (fiabilite < 0.25) {
                 dureeEstimee = Double.MAX_VALUE / 2; // route bloquee, Dijkstra l'evite
             } else {
-                dureeEstimee = duree * (20 - fiabilite * 10) / 10; // fiabilite stockee en 0.0-1.0, formule attend x10
+                dureeEstimee = duree * (20 - fiabilite * 10) / 10; // fiabilite stockee en 0.0-1.0, formule sur echelle /10
             }
             e.setAttribute("dureeEstimee", dureeEstimee);
         }
@@ -348,6 +381,4 @@ public class GenGraphe {
         dijkstra.compute();
         return dijkstra.getPath(graphe.getNode(idFin));
     }
-    
-    
 }
