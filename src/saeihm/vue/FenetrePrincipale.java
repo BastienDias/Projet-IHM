@@ -41,7 +41,7 @@ public class FenetrePrincipale extends JFrame {
     private JCheckBox cbFiabilite, cbDistance, cbDuree, cbLabelsSommets;
 
     /** Listes deroulantes : sommets de depart/arrivee d'un itineraire et type de centre pour la tournee. */
-    private JComboBox<String> cbDepart, cbArrivee, cbCentres;
+    private JComboBox<String> cbDepart, cbArrivee, cbCentres, cbCamion;
 
     /** Zone de texte de resultats (non utilisee dans l'affichage actuel). */
     private JTextArea zoneResultat;
@@ -239,7 +239,7 @@ public class FenetrePrincipale extends JFrame {
         gct.insets = new Insets(5, 2, 5, 2);
         gct.fill = GridBagConstraints.NONE;
 
-        JComboBox cbCamion = new JComboBox();
+        cbCamion = new JComboBox();
         cbCamion.addItem("1");
         cbCamion.addItem("2");
 
@@ -341,18 +341,49 @@ public class FenetrePrincipale extends JFrame {
         });
 
         btCalculerTournee.addActionListener(e -> {
-            String type = (String) cbCentres.getSelectedItem();
-            Path p2 = Algo.tourneeLivraisonFiltrage(grapheCourant, type);
-            Set<String> dejaAffiches = new HashSet<>();
-            Algo.exporterTourneeCSV(p2, "s2_01_donnees_sinjat_battah_dias");
             
-            for (Node n : p2.getEachNode()) {
-                if (dejaAffiches.add(n.getId())) {
-                    System.out.println(n.getId());
+            Path p2 ;
+            Path p1 ;
+            String type = (String) cbCentres.getSelectedItem();
+            
+            if(cbCamion.getSelectedItem().equals("1")){
+                
+                p1 = Algo.tourneeLivraisonFiltrage(grapheCourant, type);
+                Set<String> dejaAffiches = new HashSet<>();
+                Algo.exporterTourneeCSV(p1, "s2_01_donnees_sinjat_battah_dias");
+
+                for (Node n : p1.getEachNode()) {
+                    if (dejaAffiches.add(n.getId())) {
+                        System.out.println(n.getId());
+                    }
                 }
+                System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
+                lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
             }
-            System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
-            lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
+            else{
+                p1 = Algo.tournee2Camions(grapheCourant, type)[0] ;
+                p2 = Algo.tournee2Camions(grapheCourant, type)[1] ;
+                
+                Set<String> dejaAffiches = new HashSet<>();
+                
+
+                for (Node n : p1.getEachNode()) {
+                    if (dejaAffiches.add(n.getId())) {
+                        System.out.println(n.getId());
+                    }
+                }
+                System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
+                lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
+                
+                for (Node n : p2.getEachNode()) {
+                    if (dejaAffiches.add(n.getId())) {
+                        System.out.println(n.getId());
+                    }
+                }
+                System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
+                lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
+            }
+            
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());

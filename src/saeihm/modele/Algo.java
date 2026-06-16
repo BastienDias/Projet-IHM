@@ -194,5 +194,173 @@ public class Algo {
             e.printStackTrace();
         }
     }
-}
+    
+    
+/**
+     * Construit une tournee gloutonne passant par une liste de sommets donnee.
+     * Le camion part du sommet d'indice 0, puis rejoint a chaque etape le sommet
+     * de la liste non encore visite atteignable dans la plus petite duree.
+     * Cette methode est le moteur commun reutilise par la tournee a deux camions.
+     * @param g Graphe a parcourir (non null)
+     * @param aLivrer Liste des sommets a livrer par ce camion (ne contient pas le depart)
+     * @return Le chemin de la tournee (Path enracine sur le sommet de depart)
+     */
+    private static Path tourneeSurListe(Graph g, ArrayList<Node> aLivrer) {
+        ArrayList<Node> aVisiter = new ArrayList<>();
+        for (int i = 0; i < aLivrer.size(); i++) {
+            aVisiter.add(aLivrer.get(i));
+        }
+
+        Path tournee = new Path();
+        Node courant = g.getNode(0);
+        tournee.setRoot(courant);
+
+        while (!aVisiter.isEmpty()) {
+            Node prochainCentre = null;
+            Path meilleurChemin = null;
+            double dureeMin = Double.MAX_VALUE;
+            for (Node prochain : aVisiter) {
+                Path p = plusCourtChemin(g, courant.getId(), prochain.getId());
+                if (p != null && !p.empty()) {
+                    double duree = dureeChemin(p);
+                    if (duree < dureeMin) {
+                        dureeMin = duree;
+                        prochainCentre = prochain;
+                        meilleurChemin = p;
+                    }
+                }
+            }
+            if (prochainCentre != null) {
+                for (Edge e : meilleurChemin.getEdgePath()) {
+                    tournee.add(e);
+                }
+                for (Node nTraverse : meilleurChemin.getNodePath()) {
+                    aVisiter.remove(nTraverse);
+                }
+                courant = prochainCentre;
+            }
+        }
+        return tournee;
+    }
+
+    /**
+     * Trie une liste de sommets par duree de plus court chemin depuis le depart,
+     * du plus proche au plus loin, par un tri a bulles.
+     * @param g Graphe a parcourir (non null)
+     * @param aTrier Liste des sommets a trier
+     * @return Une nouvelle liste contenant les memes sommets, tries par duree croissante
+     */
+    private static ArrayList<Node> trierParDureeDepart(Graph g, ArrayList<Node> aTrier) {
+        Node depart = g.getNode(0);
+
+        ArrayList<Node> tries = new ArrayList<>();
+        ArrayList<Double> durees = new ArrayList<>();
+        for (int i = 0; i < aTrier.size(); i++) {
+            Node n = aTrier.get(i);
+            Path p = plusCourtChemin(g, depart.getId(), n.getId());
+            tries.add(n);
+            durees.add(dureeChemin(p));
+        }
+
+        for (int i = 0; i < tries.size(); i++) {
+            for (int j = 0; j < tries.size() - 1 - i; j++) {
+                if (durees.get(j) > durees.get(j + 1)) {
+                    double tmpD = durees.get(j);
+                    durees.set(j, durees.get(j + 1));
+                    durees.set(j + 1, tmpD);
+
+                    Node tmpN = tries.get(j);
+                    tries.set(j, tries.get(j + 1));
+                    tries.set(j + 1, tmpN);
+                }
+            }
+        }
+        return tries;
+    }
+
+    /**
+     * Construit la tournee de deux camions partant tous deux du sommet de depart (indice 0).
+     * Les dispensaires sont d'abord tries par duree depuis le depart, puis repartis en
+     * deux groupes par distribution alternee. Une phase d'amelioration tente ensuite de
+     * deplacer chaque dispensaire vers l'autre camion et conserve le changement seulement
+     * s'il diminue la duree du camion le plus lent.
+     * @param g Graphe a parcourir (non null)
+     * @param type Type de centre a livrer ("M", "O", "N") ou "Tous"
+     * @return Un tableau de deux Path : la tournee du camion 1 et celle du camion 2
+     */
+    public static Path[] tournee2Camions(Graph g, String type) {
+        // Etape 1 : recuperer puis trier les dispensaires a livrer
+        ArrayList<Node> aLivrer = filtrageSommet(g, type);
+        ArrayList<Node> tries = trierParDureeDepart(g, aLivrer);
+
+        // Etape 2 : distribution alternee en deux groupes
+        ArrayList<Node> groupe1 = new ArrayList<>();
+        ArrayList<Node> groupe2 = new ArrayList<>();
+        for (int i = 0; i < tries.size(); i++) {
+            if (i % 2 == 0) {
+                groupe1.add(tries.get(i));
+            } else {
+                groupe2.add(tries.get(i));
+            }
+        }
+
+        // Etape 3 : duree initiale des deux tournees
+        double meilleurMax = Math.max(
+                dureeChemin(tourneeSurListe(g, groupe1)),
+                dureeChemin(tourneeSurListe(g, groupe2)));
+
+        // Etape 4 : amelioration par deplacement d'un dispensaire vers l'autre groupe
+        boolean amelioration = true;
+        while (amelioration) {
+            amelioration = false;
+
+            // Deplacement d'un dispensaire de groupe1 vers groupe2
+            for (int i = 0; i < groupe1.size(); i++) {
+                Node centre = groupe1.get(i);
+                groupe1.remove(i);
+                groupe2.add(centre);
+
+                double nouveauMax = Math.max(
+                        dureeChemin(tourneeSurListe(g, groupe1)),
+                        dureeChemin(tourneeSurListe(g, groupe2)));
+
+                if (nouveauMax < meilleurMax) {
+                    meilleurMax = nouveauMax;
+                    amelioration = true;
+                    i = -1;
+                } else {
+                    groupe2.remove(groupe2.size() - 1);
+                    groupe1.add(i, centre);
+                }
+            }
+
+            // Deplacement d'un dispensaire de groupe2 vers groupe1
+            for (int i = 0; i < groupe2.size(); i++) {
+                Node centre = groupe2.get(i);
+                groupe2.remove(i);
+                groupe1.add(centre);
+
+                double nouveauMax = Math.max(
+                        dureeChemin(tourneeSurListe(g, groupe1)),
+                        dureeChemin(tourneeSurListe(g, groupe2)));
+
+                if (nouveauMax < meilleurMax) {
+                    meilleurMax = nouveauMax;
+                    amelioration = true;
+                    i = -1;
+                } else {
+                    groupe1.remove(groupe1.size() - 1);
+                    groupe2.add(i, centre);
+                }
+            }
+        }
+
+        // Etape 5 : tournees finales
+        Path[] resultat = new Path[2];
+        resultat[0] = tourneeSurListe(g, groupe1);
+        resultat[1] = tourneeSurListe(g, groupe2);
+        return resultat;
+    }
+    }
+
 
