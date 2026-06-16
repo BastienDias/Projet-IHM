@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
@@ -341,10 +343,16 @@ public class FenetrePrincipale extends JFrame {
         btCalculerTournee.addActionListener(e -> {
             String type = (String) cbCentres.getSelectedItem();
             Path p2 = Algo.tourneeLivraisonFiltrage(grapheCourant, type);
+            Set<String> dejaAffiches = new HashSet<>();
+            Algo.exporterTourneeCSV(p2, "s2_01_donnees_sinjat_battah_dias");
+            
             for (Node n : p2.getEachNode()) {
-                System.out.println(n.getId());
+                if (dejaAffiches.add(n.getId())) {
+                    System.out.println(n.getId());
+                }
             }
             System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
+            lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());

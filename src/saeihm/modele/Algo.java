@@ -1,5 +1,7 @@
 package saeihm.modele;
 
+import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.graphstream.graph.Edge;
@@ -132,7 +134,10 @@ public class Algo {
                 for (Edge e : meilleurChemin.getEdgePath()) {
                     tournee.add(e);
                 }
-                aVisiter.remove(prochainCentre);
+                for (Node nTraverse : meilleurChemin.getNodePath()) {
+                    aVisiter.remove(nTraverse);
+                }
+
                 courant = prochainCentre;
             }
         }
@@ -153,4 +158,41 @@ public class Algo {
         }
         return total;
     }
+    
+    public static void exporterTourneeCSV(Path tournee, String nomFichier) {
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(nomFichier))) {
+
+            writer.println("type;element,source,cible,duree_cumulee");
+
+            double cumul = 0;
+
+            // Parcours des arêtes
+            for (Edge e : tournee.getEdgePath()) {
+
+                String source = e.getNode0().getId();
+                String cible = e.getNode1().getId();
+                double duree = (double) e.getAttribute("duree");
+
+                cumul += duree;
+
+                writer.println("ARETE," + e.getId() + "," + source + "->" + cible + "," + cumul);
+            }
+
+            // Optionnel : liste des noeuds visités
+            writer.println();
+            writer.println("NODES_VISITED");
+
+            for (Node n : tournee.getNodePath()) {
+                writer.println(n.getId());
+            }
+
+            System.out.println("CSV genere : " + nomFichier);
+
+        } catch (IOException e) {
+            System.err.println("Erreur export CSV : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
+
