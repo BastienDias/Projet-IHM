@@ -46,7 +46,7 @@ public class GenGraphe {
     private static final String STYLESHEET =
             "node.M { fill-color: red; size: 20px; } " +
             "node.O { fill-color: blue; size: 20px; } " +
-            "node.N { fill-color: green; size: 20px; } " +
+            "node.N { fill-color: yellow; size: 20px; } " +
             "edge.risquee { fill-color: red; size: 3px; } " +
             "edge { fill-color: black; size: 1px; } " ;
 

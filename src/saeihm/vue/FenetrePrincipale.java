@@ -571,7 +571,7 @@ public class FenetrePrincipale extends JFrame {
 
                 if (chemin1 != null && !chemin1.empty()) {
                     for (Edge e : chemin1.getEdgePath()) {
-                        e.setAttribute("ui.style", "fill-color: rgb(255,140,0); size: 4px;");
+                        e.setAttribute("ui.style", "fill-color: rgb(0,255,0); size: 4px;");
                     }
                 }
 
