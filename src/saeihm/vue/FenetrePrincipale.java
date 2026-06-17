@@ -276,6 +276,7 @@ public class FenetrePrincipale extends JFrame {
         gct.gridy = 2;
         btCalculerTournee = new JButton("Calculer Tournee");
         panneauTournee.add(btCalculerTournee, gct);
+        btCalculerTournee.setEnabled(false);
 
         gbcDroite.gridy = 3;
         panneauDroite.add(panneauTournee, gbcDroite);
@@ -448,6 +449,7 @@ public class FenetrePrincipale extends JFrame {
         appliquerPreferencesAffichage();
         populerCombos();
         btRoutesRisquees.setEnabled(true);
+        btCalculerTournee.setEnabled(true);
         lblStatut.setText("Graphe charge : " + graphe.getNodeCount() + " sommets, " + graphe.getEdgeCount() + " routes.");
     }
 
