@@ -1,4 +1,4 @@
-package saeihm;
+
 
 import vue.FenetrePrincipale;
 
