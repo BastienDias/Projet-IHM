@@ -1,4 +1,4 @@
-package saeihm.vue;
+package vue;
 
 import java.awt.*;
 import javax.swing.*;
@@ -7,7 +7,7 @@ import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
-import saeihm.modele.GenGraphe;
+import modele.GenGraphe;
 
 /**
  * Fenetre modale d'informations sur un centre (Question 5).
@@ -84,7 +84,7 @@ public class FenetreInfosCentre extends JDialog {
         gc.gridy = 0;
         panneauHaut.add(new JLabel("Id du centre : " + idCentre), gc);
         gc.gridy = 1;
-        panneauHaut.add(new JLabel("Type du centre : " + type), gc);
+        panneauHaut.add(new JLabel("Type du centre : " + libelleType(type)), gc);
         gc.gridy = 2;
         panneauHaut.add(new JLabel("Maternite la plus proche : " + textePlusProche("M")), gc);
         gc.gridy = 3;
@@ -103,6 +103,24 @@ public class FenetreInfosCentre extends JDialog {
         panneauPrincipal.add(panneauHaut, BorderLayout.NORTH);
         panneauPrincipal.add(onglets, BorderLayout.CENTER);
         this.setContentPane(panneauPrincipal);
+    }
+
+    /**
+    * Convertit un code de type ("M", "O", "N") en libelle lisible.
+    * @param type Code du type lu sur le sommet
+    * @return Le code suivi de son intitule, ou le code seul si inconnu
+    */
+    private String libelleType(String type) {
+        if (type == null) {
+            return "inconnu";
+        }
+        
+        switch (type) {
+            case "M": return "M - Maternite";
+            case "O": return "O - Bloc operatoire";
+            case "N": return "N - Centre de nutrition";
+            default:  return type;
+        }
     }
 
     /**

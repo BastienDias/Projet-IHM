@@ -1,4 +1,4 @@
-package saeihm.vue;
+package vue;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -17,9 +17,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
-import saeihm.modele.Algo;
-
-import saeihm.modele.GenGraphe;
+import exception.FormatCsvException;
+import modele.Algo;
+import modele.GenGraphe;
 
 /**
  * Fenetre principale de l'application Medic'In.
@@ -32,7 +32,7 @@ import saeihm.modele.GenGraphe;
 public class FenetrePrincipale extends JFrame {
 
     /** Boutons d'action de la barre superieure et des panneaux lateraux. */
-    private JButton btGenerer, btCharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt, btCalculerTournee;
+    private JButton btGenerer, btCharger, btRecharger, btRoutesRisquees, btCheminLePlusSur, btCheminLePlusCourt, btCalculerTournee;
 
     /** Labels des compteurs par type de centre et barre de statut en bas de fenetre. */
     private JLabel lblNbMaternite, lblNbBloc, lblNbCentre, lblStatut;
@@ -42,9 +42,6 @@ public class FenetrePrincipale extends JFrame {
 
     /** Listes deroulantes : sommets de depart/arrivee d'un itineraire et type de centre pour la tournee. */
     private JComboBox<String> cbDepart, cbArrivee, cbCentres, cbCamion;
-
-    /** Zone de texte de resultats (non utilisee dans l'affichage actuel). */
-    private JTextArea zoneResultat;
 
     /** Panneau central accueillant la vue GraphStream. */
     private JPanel panneauGraphe;
@@ -71,8 +68,7 @@ public class FenetrePrincipale extends JFrame {
     public FenetrePrincipale() {
         super("Medic'In");
 
-        System.setProperty("org.graphstream.ui.renderer",
-                "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+        System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 
         initComposants();
         initActions();
@@ -95,12 +91,18 @@ public class FenetrePrincipale extends JFrame {
         JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btGenerer = new JButton("Generer un graphe aleatoire");
         btCharger = new JButton("Charger un graphe (.csv)");
+        
         btRoutesRisquees = new JButton("Afficher les routes risquees");
         btRoutesRisquees.setEnabled(false);
+        btRecharger = new JButton("Recharger");
+        btRecharger.setEnabled(false);
+        
         panneauBoutons.add(btGenerer);
         panneauBoutons.add(btCharger);
+        panneauBoutons.add(btRecharger);
         panneauBoutons.add(btRoutesRisquees);
 
+        
         // Logo en haut a gauche
         JLabel lblLogo = new JLabel();
         URL urlLogo = getClass().getResource("logo.png");
@@ -307,11 +309,16 @@ public class FenetrePrincipale extends JFrame {
             btRoutesRisquees.setForeground(Color.BLACK);
         }
 
+        btRecharger.setBackground(Color.LIGHT_GRAY);
+        btRecharger.setForeground(Color.BLACK);
+        btRecharger.setFocusPainted(false);
+
         btGenerer.setToolTipText("Genere un graphe avec un nombre de centres choisi");
         btCharger.setToolTipText("Charge un graphe depuis un fichier CSV");
         btRoutesRisquees.setToolTipText("Met en evidence les routes trop peu fiables");
         btCheminLePlusCourt.setToolTipText("Plus court trajet en duree (Dijkstra)");
         btCheminLePlusSur.setToolTipText("Trajet le plus fiable (penalise par fiabilite)");
+        btRecharger.setToolTipText("Réinitialise l'affichage (efface chemins et routes risquées)");
 
         panneauStats.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)), "Statistiques", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
 
@@ -336,23 +343,40 @@ public class FenetrePrincipale extends JFrame {
             int resultat = selecteur.showOpenDialog(this);
             if (resultat == JFileChooser.APPROVE_OPTION) {
                 String chemin = selecteur.getSelectedFile().getAbsolutePath();
-                Graph carte = GenGraphe.chargerGraphe(chemin);
-                afficherGraphe(carte);
+                try {
+                    Graph carte = GenGraphe.chargerGraphe(chemin);
+                    afficherGraphe(carte);
+                } catch (FormatCsvException ex) {
+                    JOptionPane.showMessageDialog(this, "Fichier CSV invalide :\n" + ex.getMessage(), "Erreur de format", JOptionPane.ERROR_MESSAGE);
+                } catch (java.io.IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Impossible de lire le fichier :\n" + chemin, "Erreur de lecture", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
+        btRecharger.addActionListener(e -> {
+            if (grapheCourant != null) {
+                reinitialiserSurlignageChemin();
+                appliquerPreferencesAffichage();
+            }
+        });
+        
         btCalculerTournee.addActionListener(e -> {
-            
-            Path p2 ;
-            Path p1 ;
+
+            Path p2;
+            Path p1;
             String type = (String) cbCentres.getSelectedItem();
-            
-            if(cbCamion.getSelectedItem().equals("1")){
-                
+
+            // Cas 1 camion : une seule tournee sur tous les centres du type choisi
+            if (cbCamion.getSelectedItem().equals("1")) {
+
                 p1 = Algo.tourneeLivraisonFiltrage(grapheCourant, type);
-                Set<String> dejaAffiches = new HashSet<>();
+
+                // Export de la tournee dans un fichier CSV de rendu
                 Algo.exporterTourneeCSV(p1, "s2_01_donnees_sinjat_battah_dias");
 
+                // Affichage des sommets visites sans doublon
+                Set<String> dejaAffiches = new HashSet<>();
                 for (Node n : p1.getEachNode()) {
                     if (dejaAffiches.add(n.getId())) {
                         System.out.println(n.getId());
@@ -361,13 +385,15 @@ public class FenetrePrincipale extends JFrame {
                 System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
                 lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
             }
-            else{
-                p1 = Algo.tournee2Camions(grapheCourant, type)[0] ;
-                p2 = Algo.tournee2Camions(grapheCourant, type)[1] ;
-                
-                Set<String> dejaAffiches = new HashSet<>();
-                
+            // Cas 2 camions : deux tournees reparties par l'algorithme a deux camions
+            else {
+                Path[] tournees = Algo.tournee2Camions(grapheCourant, type);
+                p1 = tournees[0];
+                p2 = tournees[1];
 
+                Set<String> dejaAffiches = new HashSet<>();
+
+                // Sommets visites par le camion 1
                 for (Node n : p1.getEachNode()) {
                     if (dejaAffiches.add(n.getId())) {
                         System.out.println(n.getId());
@@ -375,7 +401,8 @@ public class FenetrePrincipale extends JFrame {
                 }
                 System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
                 lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.");
-                
+
+                // Sommets visites par le camion 2
                 for (Node n : p2.getEachNode()) {
                     if (dejaAffiches.add(n.getId())) {
                         System.out.println(n.getId());
@@ -384,7 +411,7 @@ public class FenetrePrincipale extends JFrame {
                 System.out.println("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
                 lblStatut.setText("La tournee a ete effectuee en " + String.format("%.1f", Algo.dureeChemin(p2)) + " minutes.");
             }
-            
+
         });
 
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
@@ -450,6 +477,7 @@ public class FenetrePrincipale extends JFrame {
         populerCombos();
         btRoutesRisquees.setEnabled(true);
         btCalculerTournee.setEnabled(true);
+        btRecharger.setEnabled(true);
         lblStatut.setText("Graphe charge : " + graphe.getNodeCount() + " sommets, " + graphe.getEdgeCount() + " routes.");
     }
 
@@ -476,6 +504,7 @@ public class FenetrePrincipale extends JFrame {
      */
     private void demanderEtAfficherRoutesRisquees() {
         if (grapheCourant == null) return;
+        reinitialiserSurlignageChemin();
 
         String saisie = JOptionPane.showInputDialog(this,
                 "Seuil de fiabilite (entre 0 et 1)\nLes routes en dessous seront affichees en rouge :",
@@ -536,7 +565,7 @@ public class FenetrePrincipale extends JFrame {
             return null;
         }
 
-        if (nbSommets < 0) {
+        if (nbSommets <= 0) {
             JOptionPane.showMessageDialog(this, "Le nombre de sommets doit etre superieur a 0.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             return null;
         }
@@ -560,34 +589,24 @@ public class FenetrePrincipale extends JFrame {
         btCheminLePlusSur.setEnabled(true);
     }
 
-    /**
-     * Reinitialise l'apparence (ui.style) de toutes les aretes du graphe courant
-     * en noir fin, afin d'effacer le surlignage d'un itineraire precedemment affiche.
+/**
+     * Reinitialise l'apparence de tous les sommets et de toutes les aretes du graphe
+     * courant, afin d'effacer le surlignage d'un itineraire, les routes risquees et
+     * la selection d'un sommet precedemment affiches.
      */
     private void reinitialiserSurlignageChemin() {
         if (grapheCourant != null) {
             for (Edge e : grapheCourant.getEachEdge()) {
-                e.setAttribute("ui.style", "fill-color: black; size: 1px;");
+                e.removeAttribute("ui.class");
+                e.setAttribute("ui.style", "fill-color: black; size: 1px;"); //pour forcer à mettre la couleur noire de l'arrête
+            }
+            for (Node n : grapheCourant) {
+                n.removeAttribute("ui.clicked");
+                n.removeAttribute("ui.style");
             }
         }
     }
-
-    /**
-     * Convertit un Path GraphStream en chaine lisible de la forme "S1 -> S3 -> S5".
-     * @param chemin Path a convertir (non null)
-     * @return Chaine representant la sequence ordonnee des sommets du chemin
-     */
-    private String cheminToString(Path chemin) {
-        String sb = "";
-        for (Node n : chemin.getNodePath()) {
-            if (!sb.equals("")) {
-                sb = sb + " -> ";
-            }
-            sb = sb + n.getId();
-        }
-        return sb;
-    }
-
+    
     /**
      * Calcule et affiche le chemin le plus court en duree entre les centres selectionnes
      * dans les listes deroulantes. Le chemin trouve est surligne en orange sur la carte
@@ -598,7 +617,8 @@ public class FenetrePrincipale extends JFrame {
         if (grapheCourant != null) {
             String idDepart = (String) cbDepart.getSelectedItem();
             String idArrivee = (String) cbArrivee.getSelectedItem();
-
+            reinitialiserSurlignageChemin();
+            
             if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
                 JOptionPane.showMessageDialog(this,
                         "Veuillez selectionner deux centres differents.",
@@ -607,8 +627,6 @@ public class FenetrePrincipale extends JFrame {
                 Path chemin1 = GenGraphe.plusCourtChemin(grapheCourant, idDepart, idArrivee);
 
                 String resultat = "";
-
-                reinitialiserSurlignageChemin();
 
                 if (chemin1 != null && !chemin1.empty()) {
                     for (Edge e : chemin1.getEdgePath()) {
@@ -642,7 +660,8 @@ public class FenetrePrincipale extends JFrame {
         if (grapheCourant != null) {
             String idDepart = (String) cbDepart.getSelectedItem();
             String idArrivee = (String) cbArrivee.getSelectedItem();
-
+            reinitialiserSurlignageChemin();
+            
             if (idDepart == null || idArrivee == null || idDepart.equals(idArrivee)) {
                 JOptionPane.showMessageDialog(this,
                         "Veuillez selectionner deux centres differents.",
@@ -650,8 +669,6 @@ public class FenetrePrincipale extends JFrame {
             } else {
                 Path chemin2 = GenGraphe.cheminPlusSur(grapheCourant, idDepart, idArrivee);
                 String resultat = "";
-
-                reinitialiserSurlignageChemin();
 
                 if (chemin2 != null && !chemin2.empty()) {
                     for (Edge e : chemin2.getEdgePath()) {
@@ -680,11 +697,11 @@ public class FenetrePrincipale extends JFrame {
     /**
      * Ouvre une fenetre modale avec les informations du centre clique (clic droit).
      * Ne fait rien si aucun graphe n'est charge ou si le sommet n'existe pas.
-     * @param nodeId Identifiant du sommet clique (ex : "S1")
-     */
+    * @param nodeId Identifiant du sommet clique (ex : "M1")     
+    */
     private void ouvrirInfosCentre(String nodeId) {
         if (grapheCourant == null) return;
         if (grapheCourant.getNode(nodeId) == null) return;
-        new FenetreInfosCentre(this, grapheCourant, nodeId);
+        FenetreInfosCentre fenetreInfosCentre = new FenetreInfosCentre(this, grapheCourant, nodeId);
     }
 }

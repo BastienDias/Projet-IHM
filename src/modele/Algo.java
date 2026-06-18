@@ -1,4 +1,4 @@
-package saeihm.modele;
+package modele;
 
 import java.io.*;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
-import static saeihm.modele.GenGraphe.plusCourtChemin;
+import static modele.GenGraphe.plusCourtChemin;
 
 /**
  * Algorithmes de tournee de vehicule pour la livraison des dispensaires (Question 6).
@@ -17,26 +17,29 @@ import static saeihm.modele.GenGraphe.plusCourtChemin;
  * encore visite le plus proche en duree, en empruntant le plus court chemin.
  * Toutes les methodes sont statiques.
  *
- * @author elieb
+* @author Sinjat, Battah, Dias
  */
+
 public class Algo {
 
-    /**
+/**
      * Selectionne les sommets a visiter en fonction d'un type recherche.
-     * Le sommet "S1" est toujours exclu de la liste (point de depart suppose).
-     * Si le type vaut "Tous", tous les sommets (sauf S1) sont retenus.
-     * @param g Graphe a parcourir
+     * Le sommet de depart (sommet d'indice 0 du graphe) est toujours exclu de la liste.
+     * Si le type vaut "Tous", tous les sommets sont retenus sauf le depart.
+     * @param g Graphe a parcourir (non null)
      * @param typerechecher Type recherche ("M", "O", "N") ou "Tous" pour ne pas filtrer
-     * @return Liste des sommets correspondant au filtre, vide si g ou le type est null
+     * @return Liste des sommets correspondant au filtre, vide si typerechecher est null
      */
     public static ArrayList<Node> filtrageSommet(Graph g, String typerechecher) {
+        
+    String idDepart = g.getNode(0).getId();
 
         ArrayList<Node> idpt = new ArrayList<>();
         if (g != null) {
             if (typerechecher != null) {
                 for (Node n : g.getEachNode()) {
 
-                    if (!n.getId().equals("S1")) {
+                    if (!n.getId().equals(idDepart)) {
 
                         if (typerechecher.equals(n.getAttribute("type")) || typerechecher.equals("Tous")) {
                             idpt.add(n);
@@ -159,42 +162,47 @@ public class Algo {
         return total;
     }
     
+    /**
+     * Exporte une tournee dans un fichier CSV (separateur point-virgule).
+     * Le fichier contient d'abord une ligne d'en-tete, puis une ligne par arete
+     * empruntee (type, identifiant de l'arete, sommet source, sommet cible, duree
+     * cumulee depuis le depart), puis la liste ordonnee des sommets visites.
+     * L'extension ".csv" est ajoutee automatiquement au nom fourni.
+     * En cas d'erreur d'ecriture, un message est affiche sur la sortie d'erreur
+     * et aucune exception n'est propagee.
+     * @param tournee Chemin de la tournee a exporter (non null)
+     * @param nomFichier Nom du fichier sans extension (l'extension ".csv" est ajoutee)
+     */
     public static void exporterTourneeCSV(Path tournee, String nomFichier) {
+        
+        try (PrintWriter writer = new PrintWriter(new FileWriter(nomFichier+".csv"))) {
+            
+            writer.println("type;cheminPrecedantSuivant;sommetSource;cibleArrivee;dureeCumulee");
 
-        try (PrintWriter writer = new PrintWriter(new FileWriter(nomFichier))) {
-
-            writer.println("type;element,source,cible,duree_cumulee");
-
-            double cumul = 0;
-
-            // Parcours des arêtes
+            double dureeCumulee = 0;
+            
             for (Edge e : tournee.getEdgePath()) {
-
-                String source = e.getNode0().getId();
-                String cible = e.getNode1().getId();
+                String sommetSource = e.getNode0().getId();
+                String cibleArrivee = e.getNode1().getId();
                 double duree = (double) e.getAttribute("duree");
-
-                cumul += duree;
-
-                writer.println("ARETE," + e.getId() + "," + source + "->" + cible + "," + cumul);
+                dureeCumulee += duree;
+                writer.println("ARETE;" + e.getId() + ";" + sommetSource + ";" + cibleArrivee + ";" + dureeCumulee);
             }
 
-            // Optionnel : liste des noeuds visités
             writer.println();
-            writer.println("NODES_VISITED");
-
+            writer.println("SOMMETS_VISITES");
+            
             for (Node n : tournee.getNodePath()) {
                 writer.println(n.getId());
             }
 
-            System.out.println("CSV genere : " + nomFichier);
-
+            System.out.println("CSV genere : " + nomFichier + ".csv");
+            
         } catch (IOException e) {
             System.err.println("Erreur export CSV : " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    
+    }    
     
 /**
      * Construit une tournee gloutonne passant par une liste de sommets donnee.

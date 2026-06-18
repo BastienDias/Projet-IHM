@@ -1,6 +1,6 @@
 package saeihm;
 
-import saeihm.vue.FenetrePrincipale;
+import vue.FenetrePrincipale;
 
 /**
  * Point d'entree de l'application Medic'In.
