@@ -3,6 +3,7 @@ package vue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.BorderFactory;
@@ -95,50 +96,71 @@ public class PanneauTournee extends JPanel {
     public void setBoutonActif(boolean actif) {
         btCalculerTournee.setEnabled(actif);
     }
-
+/**
+     * Extrait l'ordre des centres reellement visites dans une tournee, sans doublon,
+     * le sommet de depart (indice 0) place en premier. Un centre est considere visite
+     * s'il apparait dans le chemin de la tournee.
+     * @param g Graphe a parcourir (non null)
+     * @param tournee Chemin de la tournee a analyser
+     * @return Liste ordonnee des centres visites, depart en tete
+     */
+    public static ArrayList<Node> ordreCentresVisites(Graph g, Path tournee) {
+        ArrayList<Node> ordre = new ArrayList<>();
+        Node depart = g.getNode(0);
+        ordre.add(depart);
+        for (Node n : tournee.getNodePath()) {
+            if (!ordre.contains(n)) {
+                ordre.add(n);
+            }
+        }
+        return ordre;
+    }
+    
     /** Lance le calcul d'une tournee (1 ou 2 camions) selon les combos. */
     private void calculerTournee() {
         Graph g = parent.getGrapheCourant();
         if (g == null) return;
-
         String type = (String) cbCentres.getSelectedItem();
 
         if ("1".equals(cbCamion.getSelectedItem())) {
             // Cas 1 camion
             Path p1 = Algo.tourneeLivraisonFiltrage(g, type);
-            Algo.exporterTourneeCSV(p1, "s2_01_donnees_sinjat_battah_dias");
+            double duree = Algo.dureeChemin(p1);
+            ArrayList<Node> ordre = Algo.ordreCentresVisites(g, p1);
 
-            Set<String> dejaAffiches = new HashSet<>();
-            for (Node n : p1.getEachNode()) {
-                if (dejaAffiches.add(n.getId())) {
-                    System.out.println(n.getId());
-                }
+            Algo.exporterResultat1Camion("grapheCourant.csv", duree, duree, ordre, "resultats1camion1Equipe3GroupeG2S2");
+
+            for (Node n : ordre) {
+                System.out.println(n.getId());
             }
-            String msg = "La tournee a ete effectuee en "
-                    + String.format("%.1f", Algo.dureeChemin(p1)) + " minutes.";
+            String msg = "La tournee a ete effectuee en " + String.format("%.1f", duree) + " minutes.";
             System.out.println(msg);
             parent.setStatut(msg);
+
         } else {
             // Cas 2 camions
             Path[] tournees = Algo.tournee2Camions(g, type);
             Path p1 = tournees[0];
             Path p2 = tournees[1];
 
-            Set<String> dejaAffiches = new HashSet<>();
-            for (Node n : p1.getEachNode()) {
-                if (dejaAffiches.add(n.getId())) {
-                    System.out.println(n.getId());
-                }
+            double duree1 = Algo.dureeChemin(p1);
+            double duree2 = Algo.dureeChemin(p2);
+
+            ArrayList<Node> ordre1 = Algo.ordreCentresVisites(g, p1);
+            ArrayList<Node> ordre2 = Algo.ordreCentresVisites(g, p2);
+
+            Algo.exporterResultat2Camions("grapheCourant.csv", duree1, duree2, ordre1, ordre2, "resultats1camion2Equipe3GroupeG2S2");
+
+            for (Node n : ordre1) {
+                System.out.println(n.getId());
             }
-            String msg1 = "Camion 1 : " + String.format("%.1f", Algo.dureeChemin(p1)) + " min";
+            String msg1 = "Camion 1 : " + String.format("%.1f", duree1) + " min";
             System.out.println(msg1);
 
-            for (Node n : p2.getEachNode()) {
-                if (dejaAffiches.add(n.getId())) {
-                    System.out.println(n.getId());
-                }
+            for (Node n : ordre2) {
+                System.out.println(n.getId());
             }
-            String msg2 = "Camion 2 : " + String.format("%.1f", Algo.dureeChemin(p2)) + " min";
+            String msg2 = "Camion 2 : " + String.format("%.1f", duree2) + " min";
             System.out.println(msg2);
 
             parent.setStatut(msg1 + "  |  " + msg2);

@@ -163,48 +163,113 @@ public class Algo {
     }
     
     /**
-     * Exporte une tournee dans un fichier CSV (separateur point-virgule).
-     * Le fichier contient d'abord une ligne d'en-tete, puis une ligne par arete
-     * empruntee (type, identifiant de l'arete, sommet source, sommet cible, duree
-     * cumulee depuis le depart), puis la liste ordonnee des sommets visites.
-     * L'extension ".csv" est ajoutee automatiquement au nom fourni.
-     * En cas d'erreur d'ecriture, un message est affiche sur la sortie d'erreur
-     * et aucune exception n'est propagee.
-     * @param tournee Chemin de la tournee a exporter (non null)
-     * @param nomFichier Nom du fichier sans extension (l'extension ".csv" est ajoutee)
+     * Extrait l'ordre des centres reellement visites dans une tournee, sans doublon,
+     * le sommet de depart (indice 0) place en premier. Un centre est considere visite
+     * s'il apparait dans le chemin de la tournee.
+     * @param g Graphe a parcourir (non null)
+     * @param tournee Chemin de la tournee a analyser
+     * @return Liste ordonnee des centres visites, depart en tete
      */
-    public static void exporterTourneeCSV(Path tournee, String nomFichier) {
-        
-        try (PrintWriter writer = new PrintWriter(new FileWriter(nomFichier+".csv"))) {
-            
-            writer.println("type;cheminPrecedantSuivant;sommetSource;cibleArrivee;dureeCumulee");
+    public static ArrayList<Node> ordreCentresVisites(Graph g, Path tournee) {
+        ArrayList<Node> ordre = new ArrayList<>();
+        Node depart = g.getNode(0);
+        ordre.add(depart);
+        for (Node n : tournee.getNodePath()) {
+            if (!ordre.contains(n)) {
+                ordre.add(n);
+            }
+        }
+        return ordre;
+    }
+    
+    /**
+     * Ajoute dans un fichier CSV le resultat d'evaluation d'un graphe pour le cas
+     * "1 camion, tous les dispensaires". Le fichier respecte le format impose : une
+     * ligne d'en-tete ecrite une seule fois, puis une ligne par graphe contenant le
+     * nom du graphe, la duree de l'algorithme glouton, la meilleure duree trouvee,
+     * puis les numeros des centres dans l'ordre de visite. Le fichier est complete a
+     * chaque appel (mode ajout). L'extension ".csv" est ajoutee automatiquement.
+     * En cas d'erreur d'ecriture, un message est affiche sur la sortie d'erreur et
+     * aucune exception n'est propagee.
+     * @param nomGraphe Nom du fichier graphe evalue (ex. "grapheEval1.csv")
+     * @param dureeGlouton Duree de la tournee obtenue par l'algorithme glouton
+     * @param meilleureDuree Meilleure duree obtenue (ex. apres 2-opt)
+     * @param ordreVisite Liste des centres dans l'ordre de livraison de la meilleure tournee (chaque centre une fois, depart en premier)
+     * @param nomFichier Nom du fichier de sortie sans extension (l'extension ".csv" est ajoutee)
+     */
+    public static void exporterResultat1Camion(String nomGraphe, double dureeGlouton,
+            double meilleureDuree, List<Node> ordreVisite, String nomFichier) {
 
-            double dureeCumulee = 0;
-            
-            for (Edge e : tournee.getEdgePath()) {
-                String sommetSource = e.getNode0().getId();
-                String cibleArrivee = e.getNode1().getId();
-                double duree = (double) e.getAttribute("duree");
-                dureeCumulee += duree;
-                writer.println("ARETE;" + e.getId() + ";" + sommetSource + ";" + cibleArrivee + ";" + dureeCumulee);
+        File fichier = new File(nomFichier + ".csv");
+        boolean fichierVide = (!fichier.exists()) || (fichier.length() == 0);
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(fichier, true))) {
+
+            if (fichierVide) {
+                writer.println("nomFichier;dureeAlgoGlouton1camion;meilleureDuree1camion;ordreMeilleureDuree");
             }
 
-            writer.println();
-            writer.println("SOMMETS_VISITES");
-            
-            for (Node n : tournee.getNodePath()) {
-                writer.println(n.getId());
+            String ligne = nomGraphe + ";" + Math.round(dureeGlouton) + ";" + Math.round(meilleureDuree);
+
+            for (Node n : ordreVisite) {
+                int numero = (int) n.getAttribute("numeroSommet");
+                ligne = ligne + ";" + numero;
             }
 
-            System.out.println("CSV genere : " + nomFichier + ".csv");
-            
+            writer.println(ligne);
+            System.out.println("Resultat ajoute pour : " + nomGraphe);
+
         } catch (IOException e) {
             System.err.println("Erreur export CSV : " + e.getMessage());
-            e.printStackTrace();
         }
     }    
     
-/**
+    /**
+     * Ajoute dans un fichier CSV le resultat d'evaluation d'un graphe pour le cas
+     * "2 camions". Le format respecte celui impose : une ligne d'en-tete ecrite une
+     * seule fois, puis une ligne par graphe contenant le nom du graphe, la duree du
+     * camion 1, la duree du camion 2, puis les centres du camion 1 puis ceux du camion 2
+     * (chaque tournee commencant par le sommet de depart). Le fichier est complete a
+     * chaque appel (mode ajout). En cas d'erreur d'ecriture, un message est affiche sur
+     * la sortie d'erreur et aucune exception n'est propagee.
+     * @param nomGraphe Nom du fichier graphe evalue (ex. "grapheEval1.csv")
+     * @param dureeCamion1 Duree de la tournee du camion 1
+     * @param dureeCamion2 Duree de la tournee du camion 2
+     * @param ordreCamion1 Centres du camion 1 dans l'ordre de visite (depart en premier)
+     * @param ordreCamion2 Centres du camion 2 dans l'ordre de visite (depart en premier)
+     * @param nomFichier Nom du fichier de sortie sans extension (l'extension ".csv" est ajoutee)
+     */
+    public static void exporterResultat2Camions(String nomGraphe, double dureeCamion1, double dureeCamion2, List<Node> ordreCamion1, List<Node> ordreCamion2, String nomFichier) {
+
+        File fichier = new File(nomFichier + ".csv");
+        boolean fichierVide = (!fichier.exists()) || (fichier.length() == 0);
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(fichier, true))) {
+
+            if (fichierVide) {
+                writer.println("nomFichier;DureeCamion1;DureeCamion2;‎ordreDureeCamion1Camion2");
+            }
+
+            String ligne = nomGraphe + ";" + Math.round(dureeCamion1) + ";" + Math.round(dureeCamion2);
+
+            for (Node n : ordreCamion1) {
+                int numero = (int) n.getAttribute("numeroSommet");
+                ligne = ligne + ";" + numero;
+            }
+            for (Node n : ordreCamion2) {
+                int numero = (int) n.getAttribute("numeroSommet");
+                ligne = ligne + ";" + numero;
+            }
+
+            writer.println(ligne);
+            System.out.println("Resultat 2 camions ajoute pour : " + nomGraphe);
+
+        } catch (IOException e) {
+            System.err.println("Erreur export CSV : " + e.getMessage());
+        }
+    }
+    
+    /**
      * Construit une tournee gloutonne passant par une liste de sommets donnee.
      * Le camion part du sommet d'indice 0, puis rejoint a chaque etape le sommet
      * de la liste non encore visite atteignable dans la plus petite duree.

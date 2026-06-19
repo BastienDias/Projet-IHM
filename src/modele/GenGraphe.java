@@ -233,7 +233,8 @@ public class GenGraphe {
                 noeud.setAttribute("ui.class", typeSommet);
                 noeud.setAttribute("type", typeSommet);
                 noeud.setAttribute("ui.label", nouvelId);
-
+                noeud.setAttribute("numeroSommet", numeroLigne + 1); // S1 -> 1, S2 -> 2, ... (ordre du fichier)
+                
                 idsSommets.add(nouvelId);
 
                 for (int j = 0; j < numeroLigne; j++) {
