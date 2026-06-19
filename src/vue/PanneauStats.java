@@ -16,6 +16,7 @@ import modele.GenGraphe;
 
 /**
  * Panneau lateral : affiche les compteurs de sommets par type (M / O / N).
+ * @author Sinjat, Battah, Dias
  */
 public class PanneauStats extends JPanel {
 

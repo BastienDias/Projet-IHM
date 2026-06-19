@@ -15,6 +15,7 @@ import modele.GenGraphe;
 /**
  * Panneau lateral : cases a cocher pour les preferences d'affichage des routes
  * (fiabilite, distance, duree) et des sommets (identifiants).
+ * @author Sinjat, Battah, Dias
  */
 public class PanneauAffichage extends JPanel {
 

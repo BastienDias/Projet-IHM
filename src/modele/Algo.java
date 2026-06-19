@@ -16,8 +16,7 @@ import static modele.GenGraphe.plusCourtChemin;
  * L'approche utilisee est gloutonne : a chaque etape, on rejoint le centre non
  * encore visite le plus proche en duree, en empruntant le plus court chemin.
  * Toutes les methodes sont statiques.
- *
-* @author Sinjat, Battah, Dias
+ * @author Sinjat, Battah, Dias
  */
 
 public class Algo {
@@ -197,8 +196,7 @@ public class Algo {
      * @param ordreVisite Liste des centres dans l'ordre de livraison de la meilleure tournee (chaque centre une fois, depart en premier)
      * @param nomFichier Nom du fichier de sortie sans extension (l'extension ".csv" est ajoutee)
      */
-    public static void exporterResultat1Camion(String nomGraphe, double dureeGlouton,
-            double meilleureDuree, List<Node> ordreVisite, String nomFichier) {
+    public static void exporterResultat1Camion(String nomGraphe, double dureeGlouton, double meilleureDuree, List<Node> ordreVisite, String nomFichier) {
 
         File fichier = new File(nomFichier + ".csv");
         boolean fichierVide = (!fichier.exists()) || (fichier.length() == 0);
@@ -247,7 +245,7 @@ public class Algo {
         try (PrintWriter writer = new PrintWriter(new FileWriter(fichier, true))) {
 
             if (fichierVide) {
-                writer.println("nomFichier;DureeCamion1;DureeCamion2;‎ordreDureeCamion1Camion2");
+                writer.println("nomFichier;DureeCamion1;DureeCamion2;ordreDureeCamion1Camion2");
             }
 
             String ligne = nomGraphe + ";" + Math.round(dureeCamion1) + ";" + Math.round(dureeCamion2);

@@ -28,7 +28,7 @@ import exception.FormatCsvException;
  *       et "duree" (min).</li>
  * </ul>
  *
- * @author Bastien Dias
+* @author Sinjat, Battah, Dias
  */
 public class GenGraphe {
 

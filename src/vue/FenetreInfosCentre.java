@@ -14,6 +14,7 @@ import modele.GenGraphe;
  * Ouverte lors d'un clic droit sur un sommet, elle affiche l'identifiant et le
  * type du centre, le centre le plus proche de chaque type (en duree et duree estimee),
  * puis six tables : les distances et les durees minimales vers les centres de chaque type.
+ * @author Sinjat, Battah, Dias
  */
 public class FenetreInfosCentre extends JDialog {
 

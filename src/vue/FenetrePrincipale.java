@@ -18,6 +18,7 @@ import org.graphstream.graph.Node;
  * expose les operations transverses (afficher un graphe, mettre a jour la statut,
  * reinitialiser le surlignage, repropager les preferences d'affichage) et delegue
  * tout le reste a chaque panneau specialise.
+ * @author Sinjat, Battah, Dias
  */
 public class FenetrePrincipale extends JFrame {
 

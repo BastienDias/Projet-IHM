@@ -21,7 +21,9 @@ import modele.Algo;
 /**
  * Panneau lateral : Question 6. Choix du nombre de camions (1 ou 2), du type
  * de centres a livrer, et calcul de la tournee correspondante.
+ * @author Sinjat, Battah, Dias
  */
+
 public class PanneauTournee extends JPanel {
 
     /** Reference vers la fenetre orchestratrice. */

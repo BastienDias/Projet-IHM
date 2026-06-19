@@ -20,6 +20,7 @@ import modele.GenGraphe;
 /**
  * Panneau lateral : selection d'un sommet de depart et d'arrivee, puis calcul
  * du chemin le plus court en duree ou du chemin le plus sur (penalise par fiabilite).
+ * @author Sinjat, Battah, Dias
  */
 public class PanneauItineraire extends JPanel {
 

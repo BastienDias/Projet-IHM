@@ -21,6 +21,7 @@ import modele.GenGraphe;
 /**
  * Bandeau Nord : logo + boutons Generer / Charger / Recharger / Routes risquees.
  * Delegue toute la mise a jour de l'affichage du graphe a FenetrePrincipale.
+ * @author Sinjat, Battah, Dias
  */
 public class PanneauActions extends JPanel {
 

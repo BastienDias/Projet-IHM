@@ -20,6 +20,7 @@ import org.graphstream.ui.view.Viewer;
  * Panneau central : accueille la vue GraphStream du graphe courant.
  * Gere la creation/fermeture du Viewer et la detection des clics sur les sommets
  * (clic gauche : selection ; clic droit : ouverture de la fenetre d'infos).
+ * @author Sinjat, Battah, Dias
  */
 public class PanneauGraphe extends JPanel {
 
