@@ -91,9 +91,6 @@ public class FenetrePrincipale extends JFrame {
         this.setVisible(true);
     }
 
-    // -------------------------------------------------------------------------
-    // API publique appelee par les panneaux
-    // -------------------------------------------------------------------------
 
     /** @return Le graphe courant (peut etre null tant qu'aucun n'est charge). */
     public Graph getGrapheCourant() {

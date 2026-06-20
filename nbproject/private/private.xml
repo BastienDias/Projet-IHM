@@ -2,6 +2,13 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/vue/FenetreInfosCentre.java</file>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/vue/FenetrePrincipale.java</file>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/vue/PanneauGraphe.java</file>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/vue/PanneauTournee.java</file>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/exception/FormatCsvException.java</file>
+            <file>file:/C:/Cours%20BUT%20INFO/S2/JAVA/SAE/SAE_JAVA/src/modele/Algo.java</file>
+        </group>
     </open-files>
 </project-private>

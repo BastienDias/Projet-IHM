@@ -35,6 +35,9 @@ public class PanneauTournee extends JPanel {
     /** Combo type de centres a livrer (Tous, M, O, N). */
     private final JComboBox<String> cbCentres;
 
+    /** Combo choix de l'algorithme (Glouton ou Optimise 2-opt), uniquement pour 1 camion. */
+    private final JComboBox<String> cbAlgo;
+
     /** Bouton de calcul, desactive tant qu'aucun graphe n'est charge. */
     private final JButton btCalculerTournee;
 
@@ -80,15 +83,56 @@ public class PanneauTournee extends JPanel {
         cbCentres.addItem("N");
         this.add(cbCentres, gbc);
 
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        this.add(new JLabel("Algorithme :"), gbc);
+
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        cbAlgo = new JComboBox<>();
+        cbAlgo.addItem("Glouton");
+        cbAlgo.addItem("Optimise (2-opt)");
+        cbAlgo.setSelectedIndex(1);
+        cbAlgo.setToolTipText("Choix de l'algorithme : glouton de base ou version optimisee par 2-opt sur matrice");
+        this.add(cbAlgo, gbc);
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         btCalculerTournee = new JButton("Calculer Tournee");
         btCalculerTournee.setEnabled(false);
         this.add(btCalculerTournee, gbc);
 
         btCalculerTournee.addActionListener(e -> calculerTournee());
+
+        // Masque "Glouton" en mode 2 camions (seule la version optimisee y est disponible)
+        cbCamion.addActionListener(e -> majAlgoDispoSelonCamion());
+        majAlgoDispoSelonCamion();
+    }
+
+    /**
+     * Ajuste les choix d'algorithme disponibles selon le nombre de camions selectionne.
+     * En mode 2 camions, l'option "Glouton" est retiree puisque l'ancien algorithme a
+     * ete supprime. En mode 1 camion, "Glouton" est restaure pour comparaison.
+     */
+    private void majAlgoDispoSelonCamion() {
+        if ("2".equals(cbCamion.getSelectedItem())) {
+            cbAlgo.removeItem("Glouton");
+        } else {
+            boolean dejaPresent = false;
+            for (int i = 0; i < cbAlgo.getItemCount(); i++) {
+                if ("Glouton".equals(cbAlgo.getItemAt(i))) {
+                    dejaPresent = true;
+                    break;
+                }
+            }
+            if (!dejaPresent) {
+                cbAlgo.insertItemAt("Glouton", 0);
+            }
+        }
     }
 
     /**
@@ -125,23 +169,39 @@ public class PanneauTournee extends JPanel {
         String type = (String) cbCentres.getSelectedItem();
 
         if ("1".equals(cbCamion.getSelectedItem())) {
-            // Cas 1 camion
-            Path p1 = Algo.tourneeLivraisonFiltrage(g, type);
-            double duree = Algo.dureeChemin(p1);
+            // Cas 1 camion : choix de l'algorithme selon la combobox
+            
+            cbAlgo.addItem("Optimise (2-opt)");
+            String algo = (String) cbAlgo.getSelectedItem();
+            
+            Path pGlouton = Algo.tourneeLivraisonFiltrage(g, type);
+            double dureeGlouton = Algo.dureeChemin(pGlouton);
+
+            Path p1;
+            double duree;
+            if ("Optimise (2-opt)".equals(algo)) {
+                p1 = Algo.tourneeOptimisee(g, type);
+                duree = Algo.dureeChemin(p1);
+            } else {
+                p1 = pGlouton;
+                duree = dureeGlouton;
+            }
             ArrayList<Node> ordre = Algo.ordreCentresVisites(g, p1);
 
-            Algo.exporterResultat1Camion("grapheCourant.csv", duree, duree, ordre, "resultats1camion1Equipe3GroupeG2S2");
+            Algo.exporterResultat1Camion("grapheCourant.csv", dureeGlouton, duree, ordre, "resultats1camion1Equipe3GroupeG2S2");
 
             for (Node n : ordre) {
                 System.out.println(n.getId());
             }
-            String msg = "La tournee a ete effectuee en " + String.format("%.1f", duree) + " minutes.";
+            String msg = "La tournee a ete effectuee en " + String.format("%.1f", duree) + " minutes."
+                    + " (Glouton : " + String.format("%.1f", dureeGlouton) + ")";
             System.out.println(msg);
-            parent.setStatut(msg);
+            parent.setStatut(msg); // msg en bas de page
 
         } else {
-            // Cas 2 camions
-            Path[] tournees = Algo.tournee2Camions(g, type);
+            // Cas 2 camions : seule la version optimisee est disponible
+            Path[] tournees = Algo.tournee2CamionsOptimisee(g, type);
+            
             Path p1 = tournees[0];
             Path p2 = tournees[1];
 

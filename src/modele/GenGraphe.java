@@ -132,6 +132,7 @@ public class GenGraphe {
                 node.setAttribute("type", "N");
             }
             node.setAttribute("ui.label", node.getId());
+            node.setAttribute("numeroSommet", i + 1);
         }
 
         // Relie chaque nouveau sommet a un sommet deja place : garantit un graphe connexe

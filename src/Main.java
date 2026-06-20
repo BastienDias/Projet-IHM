@@ -1,5 +1,11 @@
 
 
+import java.util.ArrayList;
+import modele.*;
+import modele.GenGraphe;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.Path;
 import vue.FenetrePrincipale;
 
 /**
@@ -14,6 +20,6 @@ public class Main {
      */
     public static void main(String[] args) {
         FenetrePrincipale fp = new FenetrePrincipale();
+        
     }
-
 }

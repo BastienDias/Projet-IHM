@@ -200,7 +200,7 @@ public class AlgoTest {
     @Test
     public void testTournee2CamionsDeuxChemins() {
         Graph g = creerGrapheTest();
-        org.graphstream.graph.Path[] resultat = Algo.tournee2Camions(g, "Tous");
+        org.graphstream.graph.Path[] resultat = Algo.tournee2CamionsOptimisee(g, "Tous");
         assertEquals(2, resultat.length);
         assertEquals(g.getNode(0), resultat[0].getRoot());
         assertEquals(g.getNode(0), resultat[1].getRoot());
@@ -212,7 +212,7 @@ public class AlgoTest {
     @Test
     public void testTournee2CamionsCouvreTousLesCentres() {
         Graph g = creerGrapheTest();
-        org.graphstream.graph.Path[] resultat = Algo.tournee2Camions(g, "Tous");
+        org.graphstream.graph.Path[] resultat = Algo.tournee2CamionsOptimisee(g, "Tous");
 
         ArrayList<Node> vus = new ArrayList<>();
         for (Node n : resultat[0].getNodePath()) {
