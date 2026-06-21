@@ -170,9 +170,8 @@ public class Algo {
      * la convention 1-based des fichiers de rendu.
      * @param n Noeud dont on veut le numero
      * @return Numero du sommet (1-based)
-     * @author elieb
      */
-    private static int numeroSommet(Node n) {
+    public static int numeroSommet(Node n) {
         Object attr = n.getAttribute("numeroSommet");
         if (attr instanceof Integer) {
             return (Integer) attr;
@@ -202,18 +201,16 @@ public class Algo {
     
     /**
      * Ajoute dans un fichier CSV le resultat d'evaluation d'un graphe pour le cas
-     * "1 camion, tous les dispensaires". Le fichier respecte le format impose : une
-     * ligne d'en-tete ecrite une seule fois, puis une ligne par graphe contenant le
-     * nom du graphe, la duree de l'algorithme glouton, la meilleure duree trouvee,
-     * puis les numeros des centres dans l'ordre de visite. Le fichier est complete a
-     * chaque appel (mode ajout). L'extension ".csv" est ajoutee automatiquement.
-     * En cas d'erreur d'ecriture, un message est affiche sur la sortie d'erreur et
-     * aucune exception n'est propagee.
-     * @param nomGraphe Nom du fichier graphe evalue (ex. "grapheEval1.csv")
+     * "1 camion". Une ligne d'en-tete est ecrite une seule fois, puis une ligne par
+     * graphe : nom du graphe, duree gloutonne, meilleure duree, puis les numeros des
+     * centres dans l'ordre de visite de la tournee retenue. Le fichier est complete a
+     * chaque appel (mode ajout). En cas d'erreur d'ecriture, un message est affiche
+     * sur la sortie d'erreur et aucune exception n'est propagee.
+     * @param nomGraphe Nom du fichier graphe evalue
      * @param dureeGlouton Duree de la tournee obtenue par l'algorithme glouton
-     * @param meilleureDuree Meilleure duree obtenue (ex. apres 2-opt)
-     * @param ordreVisite Liste des centres dans l'ordre de livraison de la meilleure tournee (chaque centre une fois, depart en premier)
-     * @param nomFichier Nom du fichier de sortie sans extension (l'extension ".csv" est ajoutee)
+     * @param meilleureDuree Meilleure duree (celle de l'algorithme retenu)
+     * @param ordreVisite Centres dans l'ordre de visite de la tournee retenue (depart en premier)
+     * @param nomFichier Nom du fichier de sortie sans extension (".csv" ajoute automatiquement)
      */
     public static void exporterResultat1Camion(String nomGraphe, double dureeGlouton, double meilleureDuree, List<Node> ordreVisite, String nomFichier) {
 
@@ -229,8 +226,7 @@ public class Algo {
             String ligne = nomGraphe + ";" + Math.round(dureeGlouton) + ";" + Math.round(meilleureDuree);
 
             for (Node n : ordreVisite) {
-                int numero = numeroSommet(n);
-                ligne = ligne + ";" + numero;
+                ligne = ligne + ";" + numeroSommet(n);
             }
 
             writer.println(ligne);
@@ -239,7 +235,7 @@ public class Algo {
         } catch (IOException e) {
             System.err.println("Erreur export CSV : " + e.getMessage());
         }
-    }    
+    }
     
     /**
      * Ajoute dans un fichier CSV le resultat d'evaluation d'un graphe pour le cas
@@ -336,7 +332,6 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param centres Liste ordonnee des centres consideres, depart en premier (indice 0)
      * @return Objet conteneur regroupant la matrice des durees et le tableau des Path
-     * @author elieb
      */
     public static DonneesCentres calculerDonneesCentres(Graph g, ArrayList<Node> centres) {
         int n = centres.size();
@@ -375,7 +370,6 @@ public class Algo {
      * @param seq Ordre de visite des centres, indices dans la liste des centres
      * @param durees Matrice des durees centre a centre (issue de {@link #calculerMatrice})
      * @return Somme des durees des transitions seq[i] -&gt; seq[i+1], pour i de 0 a length-2
-     * @author elieb
      */
     public static double dureeSequence(int[] seq, double[][] durees) {
         double total = 0;
@@ -399,7 +393,6 @@ public class Algo {
      * lookups O(1) dans la matrice.
      * @param durees Matrice n*n des durees centre a centre (issue de {@link #calculerMatrice})
      * @return Tableau d'indices de taille n donnant l'ordre de visite, seq[0] = 0 (depart)
-     * @author elieb
      */
     public static int[] tourneeGloutonSequence(double[][] durees) {
         int n = durees.length;
@@ -456,7 +449,6 @@ public class Algo {
      * @param seq Sequence initiale (typiquement issue de {@link #tourneeGloutonSequence}), modifiee en place
      * @param durees Matrice des durees centre a centre (issue de {@link #calculerMatrice})
      * @return La sequence optimisee (meme reference que le parametre {@code seq})
-     * @author elieb
      */
     public static int[] deuxOpt(int[] seq, double[][] durees) {
         int n = seq.length;
@@ -500,7 +492,6 @@ public class Algo {
      * @param centres Liste des centres dans le meme ordre d'indexation que la matrice
      * @param donnees Donnees pre-calculees contenant les Path centre a centre
      * @return Path GraphStream complet de la tournee, pret a etre affiche ou exporte
-     * @author elieb
      */
     public static Path reconstruirePath(int[] seq, ArrayList<Node> centres, DonneesCentres donnees) {
         Path resultat = new Path();
@@ -527,7 +518,6 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param type Type de centres a livrer ("M", "O", "N" ou "Tous")
      * @return Path optimise pret a etre affiche et exporte
-     * @author elieb
      */
     public static Path tourneeOptimisee(Graph g, String type) {
         ArrayList<Node> centres = filtrageSommet(g, type);
@@ -550,7 +540,6 @@ public class Algo {
      * @param durees Matrice des durees centre a centre
      * @param aVisiter Liste des indices de centres a livrer (sans le depart)
      * @return Sequence d'indices commencant par 0 puis les centres dans l'ordre glouton
-     * @author elieb
      */
     private static int[] tourneeGloutonSurIndices(double[][] durees, ArrayList<Integer> aVisiter) {
         int taille = aVisiter.size() + 1;
@@ -591,7 +580,6 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param type Type de centres a livrer ("M", "O", "N" ou "Tous")
      * @return Tableau de deux Path : tournee du camion 1 et tournee du camion 2
-     * @author elieb
      */
     public static Path[] tournee2CamionsOptimisee(Graph g, String type) {
         // 1. Liste des centres + matrice + Path pre-calcules

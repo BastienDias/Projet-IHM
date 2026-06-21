@@ -6,7 +6,7 @@ import org.graphstream.graph.Path;
  * Conteneur regroupant les deux structures pre-calculees utiles a
  * l'optimisation d'une tournee : la matrice des durees de plus court chemin
  * entre chaque paire de centres, et les Path GraphStream correspondants.
- * @author elieb
+ * @author Sinjat, Battah, Dias
  */
 public class DonneesCentres {
 

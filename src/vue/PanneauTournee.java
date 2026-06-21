@@ -4,8 +4,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -142,7 +140,8 @@ public class PanneauTournee extends JPanel {
     public void setBoutonActif(boolean actif) {
         btCalculerTournee.setEnabled(actif);
     }
-/**
+    
+    /**
      * Extrait l'ordre des centres reellement visites dans une tournee, sans doublon,
      * le sommet de depart (indice 0) place en premier. Un centre est considere visite
      * s'il apparait dans le chemin de la tournee.
@@ -162,46 +161,57 @@ public class PanneauTournee extends JPanel {
         return ordre;
     }
     
-    /** Lance le calcul d'une tournee (1 ou 2 camions) selon les combos. */
+/**
+     * Calcule et exporte la tournee de livraison selon le nombre de camions choisi.
+     * En mode 1 camion, l'algorithme choisi dans la combobox (glouton ou 2-opt) est
+     * utilise pour l'ordre exporte ; la duree gloutonne est toujours calculee pour
+     * remplir la colonne de comparaison du fichier CSV. En mode 2 camions, la version
+     * optimisee est utilisee. Les sommets visites sont affiches en console avec leur
+     * numero, et le resultat est affiche dans la barre de statut.
+     */
     private void calculerTournee() {
         Graph g = parent.getGrapheCourant();
-        if (g == null) return;
+        if (g == null) {
+            return;
+        }
         String type = (String) cbCentres.getSelectedItem();
 
         if ("1".equals(cbCamion.getSelectedItem())) {
-            // Cas 1 camion : choix de l'algorithme selon la combobox
-            
-            cbAlgo.addItem("Optimise (2-opt)");
             String algo = (String) cbAlgo.getSelectedItem();
-            
+
+            // On calcule toujours la tournee gloutonne (sert de reference pour la
+            // colonne de comparaison du CSV).
             Path pGlouton = Algo.tourneeLivraisonFiltrage(g, type);
             double dureeGlouton = Algo.dureeChemin(pGlouton);
 
-            Path p1;
-            double duree;
+            // Le chemin reellement exporte depend de l'algorithme choisi.
+            Path pChoisi;
             if ("Optimise (2-opt)".equals(algo)) {
-                p1 = Algo.tourneeOptimisee(g, type);
-                duree = Algo.dureeChemin(p1);
+                pChoisi = Algo.tourneeOptimisee(g, type);
             } else {
-                p1 = pGlouton;
-                duree = dureeGlouton;
+                pChoisi = pGlouton;
             }
-            ArrayList<Node> ordre = Algo.ordreCentresVisites(g, p1);
+            double dureeChoisie = Algo.dureeChemin(pChoisi);
 
-            Algo.exporterResultat1Camion("grapheCourant.csv", dureeGlouton, duree, ordre, "resultats1camion1Equipe3GroupeG2S2");
+            ArrayList<Node> ordre = Algo.ordreCentresVisites(g, pChoisi);
 
+            Algo.exporterResultat1Camion("grapheCourant.csv", dureeGlouton, dureeChoisie, ordre, "resultatsCamion1Equipe3GroupeG2S2");
+
+            // Affichage console des sommets visites avec leur numero
+            System.out.println("Ordre (" + algo + ") :");
             for (Node n : ordre) {
-                System.out.println(n.getId());
+                System.out.println(n.getId() + " (" + Algo.numeroSommet(n) + ")");
             }
-            String msg = "La tournee a ete effectuee en " + String.format("%.1f", duree) + " minutes."
-                    + " (Glouton : " + String.format("%.1f", dureeGlouton) + ")";
+
+            String msg = "Tournee " + algo + " : " + String.format("%.1f", dureeChoisie) + " min"
+                    + " (Glouton : " + String.format("%.1f", dureeGlouton) + " min)";
             System.out.println(msg);
-            parent.setStatut(msg); // msg en bas de page
+            parent.setStatut(msg);
 
         } else {
-            // Cas 2 camions : seule la version optimisee est disponible
+            // Cas 2 camions : seule la version optimisee est disponible.
             Path[] tournees = Algo.tournee2CamionsOptimisee(g, type);
-            
+
             Path p1 = tournees[0];
             Path p2 = tournees[1];
 
@@ -211,20 +221,22 @@ public class PanneauTournee extends JPanel {
             ArrayList<Node> ordre1 = Algo.ordreCentresVisites(g, p1);
             ArrayList<Node> ordre2 = Algo.ordreCentresVisites(g, p2);
 
-            Algo.exporterResultat2Camions("grapheCourant.csv", duree1, duree2, ordre1, ordre2, "resultats1camion2Equipe3GroupeG2S2");
+            Algo.exporterResultat2Camions("grapheCourant.csv", duree1, duree2, ordre1, ordre2, "resultatsCamions2Equipe3GroupeG2S2");
 
+            // Affichage console des sommets visites avec leur numero
+            System.out.println("Camion 1 :");
             for (Node n : ordre1) {
-                System.out.println(n.getId());
+                System.out.println(n.getId() + " (" + Algo.numeroSommet(n) + ")");
             }
-            String msg1 = "Camion 1 : " + String.format("%.1f", duree1) + " min";
-            System.out.println(msg1);
-
+            System.out.println("Camion 2 :");
             for (Node n : ordre2) {
-                System.out.println(n.getId());
+                System.out.println(n.getId() + " (" + Algo.numeroSommet(n) + ")");
             }
-            String msg2 = "Camion 2 : " + String.format("%.1f", duree2) + " min";
-            System.out.println(msg2);
 
+            String msg1 = "Camion 1 : " + String.format("%.1f", duree1) + " min";
+            String msg2 = "Camion 2 : " + String.format("%.1f", duree2) + " min";
+            System.out.println(msg1);
+            System.out.println(msg2);
             parent.setStatut(msg1 + "  |  " + msg2);
         }
     }
