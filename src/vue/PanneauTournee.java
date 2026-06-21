@@ -195,7 +195,7 @@ public class PanneauTournee extends JPanel {
 
             ArrayList<Node> ordre = Algo.ordreCentresVisites(g, pChoisi);
 
-            Algo.exporterResultat1Camion("grapheCourant.csv", dureeGlouton, dureeChoisie, ordre, "resultatsCamion1Equipe3GroupeG2S2");
+            Algo.exporterResultat1Camion("grapheCourant.csv", dureeGlouton, dureeChoisie, ordre, "resultats1CamionEquipe3GroupeG2S2");
 
             // Affichage console des sommets visites avec leur numero
             System.out.println("Ordre (" + algo + ") :");
@@ -221,7 +221,7 @@ public class PanneauTournee extends JPanel {
             ArrayList<Node> ordre1 = Algo.ordreCentresVisites(g, p1);
             ArrayList<Node> ordre2 = Algo.ordreCentresVisites(g, p2);
 
-            Algo.exporterResultat2Camions("grapheCourant.csv", duree1, duree2, ordre1, ordre2, "resultatsCamions2Equipe3GroupeG2S2");
+            Algo.exporterResultat2Camions("grapheCourant.csv", duree1, duree2, ordre1, ordre2, "resultats2CamionsEquipe3GroupeG2S2");
 
             // Affichage console des sommets visites avec leur numero
             System.out.println("Camion 1 :");
