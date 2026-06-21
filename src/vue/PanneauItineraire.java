@@ -179,4 +179,20 @@ public class PanneauItineraire extends JPanel {
         }
         parent.setStatut(" Itineraire calcule : " + resultat);
     }
+    
+    /**
+     * Vide les comboBox, utiliser lorsque qu'on supprime le graphe courant via le menu
+     */
+    public void viderCombos() {
+        cbDepart.removeAllItems();
+        cbArrivee.removeAllItems();
+    }
+    
+    /**
+     * Désactive les boutons utiliser lorsque qu'on supprime le graphe courant via le menu
+     */
+    public void boutonCheminDesactiver(){
+        btCheminLePlusCourt.setEnabled(false);
+        btCheminLePlusSur.setEnabled(false);      
+    }
 }

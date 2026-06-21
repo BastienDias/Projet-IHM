@@ -71,4 +71,13 @@ public class PanneauStats extends JPanel {
         lblNbBloc.setText("Blocs operatoires (O) : " + GenGraphe.compterSommetsParType(g, "O"));
         lblNbCentre.setText("Centres de nutrition (N) : " + GenGraphe.compterSommetsParType(g, "N"));
     }
+    
+    /**
+     * Supprime les infos des labels lorsque qu'on supprime un graphe
+     */
+    public void reinitialiser() {
+    lblNbMaternite.setText("Maternites (M) : -");
+    lblNbBloc.setText("Blocs operatoires (O) : -");
+    lblNbCentre.setText("Centres de nutrition (N) : -");
+}
 }

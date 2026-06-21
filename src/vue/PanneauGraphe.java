@@ -32,6 +32,8 @@ public class PanneauGraphe extends JPanel {
 
     /** Vue active utilisee pour la detection des clics. */
     private ViewPanel vueCourante;
+    
+    private JLabel lblVide;
 
     /**
      * Construit le panneau et y affiche un placeholder texte.
@@ -41,7 +43,8 @@ public class PanneauGraphe extends JPanel {
         super(new BorderLayout());
         this.parent = parent;
         this.setBorder(BorderFactory.createTitledBorder("Carte du district"));
-        this.add(new JLabel("Aucun graphe charge.", SwingConstants.CENTER), BorderLayout.CENTER);
+        lblVide = new JLabel("Aucun graphe charge.", SwingConstants.CENTER);
+        this.add(lblVide, BorderLayout.CENTER);
     }
 
     /**
@@ -90,5 +93,22 @@ public class PanneauGraphe extends JPanel {
         this.add((Component) vue, BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
+    }
+    
+    /**
+     * Supprime le graphe afficher actuellemnent
+     */
+    public void supprimer() {
+    if (viewerCourant != null) {
+        viewerCourant.close();
+        viewerCourant = null;
+    }
+    vueCourante = null;
+    this.removeAll();
+    this.add(lblVide, BorderLayout.CENTER);
+    lblVide.setText("Aucun graphe charge.");
+    SwingUtilities.updateComponentTreeUI(this);
+    this.revalidate();
+    this.repaint();
     }
 }

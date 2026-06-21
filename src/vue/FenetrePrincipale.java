@@ -1,12 +1,21 @@
 package vue;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.plaf.ColorUIResource;
 
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
@@ -21,6 +30,15 @@ import org.graphstream.graph.Node;
  * @author Sinjat, Battah, Dias
  */
 public class FenetrePrincipale extends JFrame {
+    
+    boolean modeSombre = false;
+    /**Couleurs pour le mode sombre de la fenêtre. */
+    private static final Color FOND_SOMBRE = new ColorUIResource(43, 43, 43);
+    private static final Color TEXTE_SOMBRE = new ColorUIResource(220, 220, 220);
+
+    /**Couleurs pour le mode clair de la fenêtre. */
+    private static final Color FOND_CLAIR = new ColorUIResource(238, 238, 238);
+    private static final Color TEXTE_CLAIR = new ColorUIResource(Color.BLACK);
 
     /** Graphe actuellement affiche. Null tant qu'aucun graphe n'a ete charge. */
     private Graph grapheCourant;
@@ -83,6 +101,7 @@ public class FenetrePrincipale extends JFrame {
         contenu.add(panneauGraphe, BorderLayout.CENTER);
         contenu.add(panneauDroite, BorderLayout.EAST);
         contenu.add(lblStatut, BorderLayout.SOUTH);
+        initMenu();
         this.setContentPane(contenu);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -115,7 +134,68 @@ public class FenetrePrincipale extends JFrame {
 
         setStatut("Graphe charge : " + graphe.getNodeCount()
                 + " sommets, " + graphe.getEdgeCount() + " routes.");
+        if (modeSombre) {
+            grapheCourant.setAttribute("ui.stylesheet", "graph { fill-color: #2B2B2B; } edge { text-color: white; }");
+        } 
+        else {
+            grapheCourant.setAttribute("ui.stylesheet", "graph { fill-color: #FFFFFF; } edge { text-color: black; }");
+        }
     }
+    
+    /**
+    * Initialise un menu bar permettant d'interagir avec la fenêtre
+    */
+    private void initMenu(){
+        JMenuBar menu = new JMenuBar();
+        this.setJMenuBar(menu);
+        JMenu affichage = new JMenu("Affichage");
+        JMenu carte = new JMenu("Paramètres de la carte");
+        menu.add(affichage);
+        menu.add(carte);
+        
+        JMenuItem sombre = new JMenuItem("Mode sombre");
+        sombre.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                appliquerModeSombre();
+            }
+        });
+        JMenuItem clair = new JMenuItem("Mode clair");
+        clair.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                appliquerModeNormal();
+            }
+        });
+        affichage.add(sombre);
+        affichage.add(clair);
+        
+        JMenuItem supprimer = new JMenuItem("Supprimer la carte");
+        supprimer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                grapheCourant = null;
+                panneauGraphe.supprimer();
+                panneauStats.reinitialiser();
+                panneauItineraire.viderCombos();
+                panneauActions.setBoutonsApresChargement(false);
+                panneauItineraire.boutonCheminDesactiver();
+                panneauTournee.setBoutonActif(false);
+                lblStatut.setText(" ");
+            }
+        });
+        JMenuItem surlignage = new JMenuItem("Supprimer le surlignage");
+        surlignage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {    
+                reinitialiserSurlignage();
+                lblStatut.setText("Graphe charge : " + grapheCourant.getNodeCount() + " sommets, " + grapheCourant.getEdgeCount() + " routes.");
+            }
+        }); 
+        carte.add(supprimer);
+        carte.add(surlignage);
+    }
+
 
     /**
      * Met a jour la barre de statut.
@@ -141,7 +221,83 @@ public class FenetrePrincipale extends JFrame {
             n.removeAttribute("ui.style");
         }
     }
+    
+    /**
+    *  Reinitialise l'apparence de toutes les aretes marquées comme risquées du graphe courant
+    *  en noir fin, afin d'effacer le surlignage d'un itineraire precedemment affiche.
+    */
+//    private void reinitialiserSurlignageRoutesRisquees(){
+//        if(grapheCourant != null){
+//            for (Edge e : grapheCourant.getEachEdge()) {
+//                e.removeAttribute("ui.class");
+//            }
+//        }
+//    }
 
+    
+    /**
+    * Applique les couleurs à la fenêtre pour avoir un mode sombre
+    */
+    private void appliquerModeSombre(){
+        modeSombre = true;
+        
+        UIManager.put("Panel.background", FOND_SOMBRE);
+        UIManager.put("Label.foreground", TEXTE_SOMBRE);
+        UIManager.put("CheckBox.background", FOND_SOMBRE);
+        UIManager.put("CheckBox.foreground", TEXTE_SOMBRE);
+        UIManager.put("ComboBox.background", FOND_SOMBRE);
+        UIManager.put("ComboBox.foreground", TEXTE_SOMBRE);
+        UIManager.put("TitledBorder.titleColor", TEXTE_SOMBRE);
+        UIManager.put("OptionPane.background", FOND_SOMBRE);
+        UIManager.put("OptionPane.messageForeground", TEXTE_SOMBRE);
+        UIManager.put("MenuBar.background", FOND_SOMBRE);
+        UIManager.put("MenuBar.foreground", TEXTE_SOMBRE);
+        UIManager.put("MenuItem.background", FOND_SOMBRE);
+        UIManager.put("MenuItem.foreground", TEXTE_SOMBRE);
+        UIManager.put("Table.background", FOND_SOMBRE);
+        UIManager.put("Table.foreground", TEXTE_SOMBRE);
+        UIManager.put("TableHeader.background", FOND_SOMBRE);
+        UIManager.put("TableHeader.foreground", TEXTE_SOMBRE);
+        UIManager.put("Viewport.background", FOND_SOMBRE);
+        SwingUtilities.updateComponentTreeUI(this);
+        
+        if (grapheCourant != null) 
+             grapheCourant.setAttribute("ui.stylesheet", "graph { fill-color: #2B2B2B; } edge { text-color: white; }");
+    }    
+    
+    /**
+     * Applique les couleurs à la fenêtre pour avoir un mode clair
+    */
+    private void appliquerModeNormal(){
+        modeSombre = false;
+        
+        UIManager.put("Panel.background", FOND_CLAIR);
+        UIManager.put("Label.foreground", TEXTE_CLAIR);
+        UIManager.put("CheckBox.background", FOND_CLAIR);
+        UIManager.put("CheckBox.foreground", TEXTE_CLAIR);
+        UIManager.put("ComboBox.background", FOND_CLAIR);
+        UIManager.put("ComboBox.foreground", TEXTE_CLAIR);
+        UIManager.put("TitledBorder.titleColor", TEXTE_CLAIR);
+        UIManager.put("OptionPane.background", FOND_CLAIR);
+        UIManager.put("OptionPane.messageForeground", TEXTE_CLAIR);
+        UIManager.put("MenuBar.background", FOND_CLAIR);
+        UIManager.put("MenuBar.foreground", TEXTE_CLAIR);
+        UIManager.put("Menu.background", FOND_CLAIR);
+        UIManager.put("Menu.foreground", TEXTE_CLAIR);
+        UIManager.put("MenuItem.background", FOND_CLAIR);
+        UIManager.put("MenuItem.foreground", TEXTE_CLAIR);
+        UIManager.put("Table.background", FOND_CLAIR);
+        UIManager.put("Table.foreground", TEXTE_CLAIR);
+        UIManager.put("TableHeader.background", FOND_CLAIR);
+        UIManager.put("TableHeader.foreground", TEXTE_CLAIR);
+        UIManager.put("Viewport.background", FOND_CLAIR);
+        SwingUtilities.updateComponentTreeUI(this);
+        
+        if (grapheCourant != null) {
+            grapheCourant.setAttribute("ui.stylesheet", "graph { fill-color: #FFFFFF; } edge { text-color: black; }");
+        }
+    }
+    
     /**
      * Repropage l'etat des cases d'affichage sur le graphe courant.
      * Methode appelee notamment par le bouton "Recharger" du PanneauActions.

@@ -158,7 +158,13 @@ public class FenetreInfosCentre extends JDialog {
         }
 
         String[] colonnes = {"Id", intitule};
-        return new JTable(donnees, colonnes);
+            JTable table = new JTable(donnees, colonnes) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+    return table;
     }
 
     /**

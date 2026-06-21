@@ -29,7 +29,7 @@ public class PanneauActions extends JPanel {
     private final FenetrePrincipale parent;
 
     /** Boutons du bandeau. */
-    private final JButton btGenerer, btCharger, btRecharger, btRoutesRisquees;
+    private final JButton btGenerer, btCharger, btRoutesRisquees;
 
     /**
      * Construit le bandeau d'actions.
@@ -44,12 +44,9 @@ public class PanneauActions extends JPanel {
         btCharger = new JButton("Charger un graphe (.csv)");
         btRoutesRisquees = new JButton("Afficher les routes risquees");
         btRoutesRisquees.setEnabled(false);
-        btRecharger = new JButton("Recharger");
-        btRecharger.setEnabled(false);
 
         panneauBoutons.add(btGenerer);
         panneauBoutons.add(btCharger);
-        panneauBoutons.add(btRecharger);
         panneauBoutons.add(btRoutesRisquees);
 
         JLabel lblLogo = new JLabel();
@@ -75,14 +72,10 @@ public class PanneauActions extends JPanel {
         btRoutesRisquees.setBackground(Color.LIGHT_GRAY);
         btRoutesRisquees.setForeground(Color.BLACK);
         btRoutesRisquees.setFocusPainted(false);
-        btRecharger.setBackground(Color.LIGHT_GRAY);
-        btRecharger.setForeground(Color.BLACK);
-        btRecharger.setFocusPainted(false);
 
         btGenerer.setToolTipText("Genere un graphe avec un nombre de centres choisi");
         btCharger.setToolTipText("Charge un graphe depuis un fichier CSV");
         btRoutesRisquees.setToolTipText("Met en evidence les routes trop peu fiables");
-        btRecharger.setToolTipText("Reinitialise l'affichage (efface chemins et routes risquees)");
 
         brancherEcouteurs();
     }
@@ -99,13 +92,6 @@ public class PanneauActions extends JPanel {
             if (g != null) parent.afficherGraphe(g);
         });
 
-        btRecharger.addActionListener(e -> {
-            if (parent.getGrapheCourant() != null) {
-                parent.reinitialiserSurlignage();
-                parent.appliquerPreferencesAffichage();
-            }
-        });
-
         btRoutesRisquees.addActionListener(e -> demanderEtAfficherRoutesRisquees());
     }
 
@@ -115,7 +101,6 @@ public class PanneauActions extends JPanel {
      */
     public void setBoutonsApresChargement(boolean actif) {
         btRoutesRisquees.setEnabled(actif);
-        btRecharger.setEnabled(actif);
     }
 
     /** Demande la taille du graphe puis le genere aleatoirement. */
@@ -191,5 +176,5 @@ public class PanneauActions extends JPanel {
         int nbRisquees = GenGraphe.marquerRoutesRisquees(g, seuil);
         parent.setStatut("Routes risquees (fiabilite < " + seuil + ") : "
                 + nbRisquees + " sur " + g.getEdgeCount());
-    }
+    }          
 }
