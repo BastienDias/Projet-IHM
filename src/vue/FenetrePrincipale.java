@@ -2,6 +2,7 @@ package vue;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -76,6 +77,10 @@ public class FenetrePrincipale extends JFrame {
 
         // Empilement vertical du panneau de droite
         JPanel panneauDroite = new JPanel(new GridBagLayout());
+        // Largeur figee : la zone EAST respecte la largeur preferee. La hauteur
+        // est ignoree par BorderLayout.EAST (la zone est etiree verticalement).
+        panneauDroite.setPreferredSize(new Dimension(330, 0));
+        panneauDroite.setMinimumSize(new Dimension(330, 0));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -87,14 +92,12 @@ public class FenetrePrincipale extends JFrame {
         gbc.gridy = 1;
         panneauDroite.add(panneauAffichage, gbc);
         gbc.gridy = 2;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        panneauDroite.add(panneauItineraire, gbc);
-        gbc.gridy = 3;
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        panneauDroite.add(panneauItineraire, gbc);
+        gbc.gridy = 3;
         panneauDroite.add(panneauTournee, gbc);
-
+        
         // Assemblage final
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.add(panneauActions, BorderLayout.NORTH);
