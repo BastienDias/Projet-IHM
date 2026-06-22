@@ -28,9 +28,13 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param typerechecher Type recherche ("M", "O", "N") ou "Tous" pour ne pas filtrer
      * @return Liste des sommets correspondant au filtre, vide si typerechecher est null
+     * @throws IllegalArgumentException si le graphe est null ou ne contient aucun sommet
      */
     public static ArrayList<Node> filtrageSommet(Graph g, String typerechecher) {
-        
+        if (g == null || g.getNodeCount() == 0) {
+            throw new IllegalArgumentException("Le graphe est null ou vide : impossible de filtrer les sommets.");
+        }
+
     String idDepart = g.getNode(0).getId();
 
         ArrayList<Node> idpt = new ArrayList<>();
@@ -58,8 +62,12 @@ public class Algo {
      * comme livres.
      * @param g Graphe a parcourir (non null)
      * @return Le chemin complet de la tournee (Path enracine sur le sommet de depart)
+     * @throws IllegalArgumentException si le graphe est null ou ne contient aucun sommet
      */
     public static Path tourneeLivraisonTotale(Graph g) {
+        if (g == null || g.getNodeCount() == 0) {
+            throw new IllegalArgumentException("Le graphe est null ou vide : impossible de construire une tournee.");
+        }
         List<Node> aVisiter = new ArrayList<>();
         Path tournee = new Path();
         Node courant = g.getNode(0);
@@ -107,6 +115,7 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param type Type de centre a livrer ("M", "O", "N") ou "Tous"
      * @return Le chemin de la tournee filtree (Path enracine sur le sommet de depart)
+     * @throws IllegalArgumentException si le graphe est null ou ne contient aucun sommet
      */
     public static Path tourneeLivraisonFiltrage(Graph g, String type) {
         ArrayList<Node> aVisiter = filtrageSommet(g, type);
@@ -298,7 +307,6 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param centres Liste ordonnee des centres consideres, depart en premier (indice 0)
      * @return Matrice n*n des durees de plus court chemin entre centres (n = taille de la liste)
-     * @author elieb
      */
     public static double[][] calculerMatrice(Graph g, ArrayList<Node> centres) {
        int n = centres.size();
@@ -518,6 +526,7 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param type Type de centres a livrer ("M", "O", "N" ou "Tous")
      * @return Path optimise pret a etre affiche et exporte
+     * @throws IllegalArgumentException si le graphe est null ou ne contient aucun sommet
      */
     public static Path tourneeOptimisee(Graph g, String type) {
         ArrayList<Node> centres = filtrageSommet(g, type);
@@ -580,6 +589,7 @@ public class Algo {
      * @param g Graphe a parcourir (non null)
      * @param type Type de centres a livrer ("M", "O", "N" ou "Tous")
      * @return Tableau de deux Path : tournee du camion 1 et tournee du camion 2
+     * @throws IllegalArgumentException si le graphe est null ou ne contient aucun sommet
      */
     public static Path[] tournee2CamionsOptimisee(Graph g, String type) {
         // 1. Liste des centres + matrice + Path pre-calcules

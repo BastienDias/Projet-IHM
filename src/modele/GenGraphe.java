@@ -103,10 +103,14 @@ public class GenGraphe {
      * chaque nouveau sommet a un sommet deja place, puis des aretes supplementaires
      * sont ajoutees entre deux sommets quelconques avec une probabilite de PROBA_AUTRE.
      * Chaque arete recoit une fiabilite, une distance et une duree aleatoires.
-     * @param nbSommets Nombre de sommets souhaite pour la creation du graphe
+     * @param nbSommets Nombre de sommets souhaite pour la creation du graphe (doit etre strictement positif)
      * @return carteDistrict : un graphe de nbSommets sommets avec ses routes initialisees
+     * @throws IllegalArgumentException si nbSommets est inferieur ou egal a 0
      */
     public static Graph construireGrapheAleatoire(int nbSommets) {
+        if (nbSommets <= 0) {
+            throw new IllegalArgumentException("Le nombre de sommets doit etre strictement positif (recu : " + nbSommets + ").");
+        }
         Graph carteDistrict = new SingleGraph("carte");
         carteDistrict.setAttribute("ui.stylesheet", STYLESHEET);
         Random rand = new Random();
@@ -364,11 +368,15 @@ public class GenGraphe {
      * Calcule le plus court chemin en duree entre deux sommets via l'algorithme de Dijkstra.
      * Le cout minimise est l'attribut "duree" des aretes.
      * @param graphe Graphe sur lequel calculer (non null)
-     * @param idDebut Identifiant du sommet de depart
-     * @param idFin Identifiant du sommet d'arrivee
+     * @param idDebut Identifiant du sommet de depart (doit exister dans le graphe)
+     * @param idFin Identifiant du sommet d'arrivee (doit exister dans le graphe)
      * @return Le chemin trouve ; un Path vide si aucun chemin n'existe entre les deux sommets
+     * @throws IllegalArgumentException si le graphe est null, ou si l'un des deux identifiants ne correspond a aucun sommet
      */
     public static Path plusCourtChemin(Graph graphe, String idDebut, String idFin) {
+        if (graphe == null || graphe.getNode(idDebut) == null || graphe.getNode(idFin) == null) {
+            throw new IllegalArgumentException("Graphe null ou identifiant de sommet introuvable (depart : " + idDebut + ", arrivee : " + idFin + ").");
+        }
         Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "duree");
         dijkstra.init(graphe);
         dijkstra.setSource(graphe.getNode(idDebut));
@@ -383,11 +391,17 @@ public class GenGraphe {
      * Les routes dont la fiabilite est inferieure a 0.25 recoivent une duree estimee tres elevee
      * afin d'etre evitees par Dijkstra. Le cout minimise est ensuite "dureeEstimee".
      * @param graphe Graphe sur lequel calculer (non null)
-     * @param idDebut Identifiant du sommet de depart
-     * @param idFin Identifiant du sommet d'arrivee
+     * @param idDebut Identifiant du sommet de depart (doit exister dans le graphe)
+     * @param idFin Identifiant du sommet d'arrivee (doit exister dans le graphe)
      * @return Le chemin le plus sur ; un Path vide si aucun chemin praticable n'existe
+     * @throws IllegalArgumentException si le graphe est null, ou si l'un des deux identifiants ne correspond a aucun sommet
+     * @throws NullPointerException si une arete ne porte pas l'attribut "fiabilite" ou "duree"
+     *         (cas anormal : toutes les aretes des graphes generes ou charges sont valuees)
      */
     public static Path cheminPlusSur(Graph graphe, String idDebut, String idFin) {
+        if (graphe == null || graphe.getNode(idDebut) == null || graphe.getNode(idFin) == null) {
+            throw new IllegalArgumentException("Graphe null ou identifiant de sommet introuvable (depart : " + idDebut + ", arrivee : " + idFin + ").");
+        }
         for (Edge e : graphe.getEachEdge()) {
             double fiabilite = (double) e.getAttribute("fiabilite");
             double duree     = (double) e.getAttribute("duree");

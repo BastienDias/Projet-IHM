@@ -32,7 +32,8 @@ public class PanneauGraphe extends JPanel {
 
     /** Vue active utilisee pour la detection des clics. */
     private ViewPanel vueCourante;
-    
+
+    /** Label affiche au centre quand aucun graphe n'est charge (placeholder). */
     private JLabel lblVide;
 
     /**
@@ -96,7 +97,8 @@ public class PanneauGraphe extends JPanel {
     }
     
     /**
-     * Supprime le graphe afficher actuellemnent
+     * Ferme le viewer courant et reaffiche le placeholder "Aucun graphe charge".
+     * Utilisee lorsque l'utilisateur supprime la carte via le menu.
      */
     public void supprimer() {
     if (viewerCourant != null) {

@@ -61,17 +61,22 @@ public class PanneauTournee extends JPanel {
         gbc.gridy = 0;
         this.add(new JLabel("Choix du nombre de camion(s) :"), gbc);
 
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         gbc.gridx = 1;
         gbc.gridy = 0;
         this.add(cbCamion, gbc);
 
         gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         gbc.gridx = 0;
         gbc.gridy = 1;
         this.add(new JLabel("Type centres :"), gbc);
 
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         gbc.gridx = 1;
         gbc.gridy = 1;
         cbCentres = new JComboBox<>();
@@ -82,11 +87,14 @@ public class PanneauTournee extends JPanel {
         this.add(cbCentres, gbc);
 
         gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         gbc.gridx = 0;
         gbc.gridy = 2;
         this.add(new JLabel("Algorithme :"), gbc);
 
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         gbc.gridx = 1;
         gbc.gridy = 2;
         cbAlgo = new JComboBox<>();
@@ -139,26 +147,6 @@ public class PanneauTournee extends JPanel {
      */
     public void setBoutonActif(boolean actif) {
         btCalculerTournee.setEnabled(actif);
-    }
-    
-    /**
-     * Extrait l'ordre des centres reellement visites dans une tournee, sans doublon,
-     * le sommet de depart (indice 0) place en premier. Un centre est considere visite
-     * s'il apparait dans le chemin de la tournee.
-     * @param g Graphe a parcourir (non null)
-     * @param tournee Chemin de la tournee a analyser
-     * @return Liste ordonnee des centres visites, depart en tete
-     */
-    public static ArrayList<Node> ordreCentresVisites(Graph g, Path tournee) {
-        ArrayList<Node> ordre = new ArrayList<>();
-        Node depart = g.getNode(0);
-        ordre.add(depart);
-        for (Node n : tournee.getNodePath()) {
-            if (!ordre.contains(n)) {
-                ordre.add(n);
-            }
-        }
-        return ordre;
     }
     
 /**

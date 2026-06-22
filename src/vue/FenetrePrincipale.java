@@ -32,13 +32,17 @@ import org.graphstream.graph.Node;
  */
 public class FenetrePrincipale extends JFrame {
     
+    /** Indique si le mode sombre est actuellement actif (true) ou le mode clair (false). */
     boolean modeSombre = false;
-    /**Couleurs pour le mode sombre de la fenêtre. */
+
+    /** Couleur de fond utilisee par le mode sombre. */
     private static final Color FOND_SOMBRE = new ColorUIResource(43, 43, 43);
+    /** Couleur de texte utilisee par le mode sombre. */
     private static final Color TEXTE_SOMBRE = new ColorUIResource(220, 220, 220);
 
-    /**Couleurs pour le mode clair de la fenêtre. */
+    /** Couleur de fond utilisee par le mode clair. */
     private static final Color FOND_CLAIR = new ColorUIResource(238, 238, 238);
+    /** Couleur de texte utilisee par le mode clair. */
     private static final Color TEXTE_CLAIR = new ColorUIResource(Color.BLACK);
 
     /** Graphe actuellement affiche. Null tant qu'aucun graphe n'a ete charge. */
@@ -79,8 +83,8 @@ public class FenetrePrincipale extends JFrame {
         JPanel panneauDroite = new JPanel(new GridBagLayout());
         // Largeur figee : la zone EAST respecte la largeur preferee. La hauteur
         // est ignoree par BorderLayout.EAST (la zone est etiree verticalement).
-        panneauDroite.setPreferredSize(new Dimension(330, 0));
-        panneauDroite.setMinimumSize(new Dimension(330, 0));
+        panneauDroite.setPreferredSize(new Dimension(360, 0));
+        panneauDroite.setMinimumSize(new Dimension(360, 0));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -108,7 +112,7 @@ public class FenetrePrincipale extends JFrame {
         this.setContentPane(contenu);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(900, 650);
+        this.setSize(950, 800);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
@@ -146,8 +150,14 @@ public class FenetrePrincipale extends JFrame {
     }
     
     /**
-    * Initialise un menu bar permettant d'interagir avec la fenêtre
-    */
+     * Construit et installe la barre de menus de la fenetre.
+     * Deux menus sont proposes :
+     * <ul>
+     *   <li><b>Affichage</b> : bascule entre mode sombre et mode clair ;</li>
+     *   <li><b>Parametres de la carte</b> : suppression du graphe courant et
+     *       suppression du surlignage (itineraires, routes risquees).</li>
+     * </ul>
+     */
     private void initMenu(){
         JMenuBar menu = new JMenuBar();
         this.setJMenuBar(menu);
@@ -224,19 +234,6 @@ public class FenetrePrincipale extends JFrame {
             n.removeAttribute("ui.style");
         }
     }
-    
-    /**
-    *  Reinitialise l'apparence de toutes les aretes marquées comme risquées du graphe courant
-    *  en noir fin, afin d'effacer le surlignage d'un itineraire precedemment affiche.
-    */
-//    private void reinitialiserSurlignageRoutesRisquees(){
-//        if(grapheCourant != null){
-//            for (Edge e : grapheCourant.getEachEdge()) {
-//                e.removeAttribute("ui.class");
-//            }
-//        }
-//    }
-
     
     /**
     * Applique les couleurs à la fenêtre pour avoir un mode sombre
