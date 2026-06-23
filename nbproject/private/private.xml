@@ -5,6 +5,20 @@
         <group>
             <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/test/modele/AlgoTest.java</file>
             <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/test/modele/GenGrapheTest.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/modele/Algo.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/modele/package-info.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/exception/package-info.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/exception/FormatCsvException.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauStats.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/Main.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/FenetreInfosCentre.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/FenetrePrincipale.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauActions.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauAffichage.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauGraphe.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauItineraire.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/vue/PanneauTournee.java</file>
+            <file>file:/D:/BUT1/S2/SAE_TF/SAE_TF/src/modele/DonneesCentres.java</file>
         </group>
     </open-files>
 </project-private>

@@ -79,5 +79,5 @@ public class PanneauStats extends JPanel {
     lblNbMaternite.setText("Maternites (M) : -");
     lblNbBloc.setText("Blocs operatoires (O) : -");
     lblNbCentre.setText("Centres de nutrition (N) : -");
-}
+    }
 }
