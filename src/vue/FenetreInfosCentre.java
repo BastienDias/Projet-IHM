@@ -204,8 +204,6 @@ public class FenetreInfosCentre extends JDialog {
         if (idPlusProche.equals("")) {
             return "aucun";
         }
-        return idPlusProche
-                + " | duree : " + String.format("%.0f", meilleureDuree) + " min"
-                + " | duree estimee : " + String.format("%.0f", dureeEstimee) + " min";
+        return idPlusProche + " | duree : " + String.format("%.0f", meilleureDuree) + " min" + " | duree estimee : " + String.format("%.0f", dureeEstimee) + " min";
     }
 }

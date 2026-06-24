@@ -1,7 +1,6 @@
 package modele;
 
 import java.io.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.graphstream.graph.Edge;
@@ -38,7 +37,7 @@ public class Algo {
     String idDepart = g.getNode(0).getId();
 
         ArrayList<Node> idpt = new ArrayList<>();
-        if (g != null) {
+        
             if (typerechecher != null) {
                 for (Node n : g.getEachNode()) {
 
@@ -50,7 +49,7 @@ public class Algo {
                     }
                 }
             }
-        }
+        
         return idpt;
     }
 
@@ -297,39 +296,6 @@ public class Algo {
     // ============================================================
 
     /**
-     * Pre-calcule la matrice des durees de plus court chemin entre chaque paire de
-     * centres. La case matrice[i][j] contient la duree (en minutes) du plus court
-     * chemin du centre i au centre j, ou les indices i et j sont des positions dans
-     * la liste {@code centres} fournie en parametre. La diagonale est laissee a 0.
-     * Une paire de centres non connectes est marquee {@link Double#POSITIVE_INFINITY}
-     * pour eviter qu'un algorithme d'optimisation ne la considere a tort comme un
-     * raccourci gratuit. La matrice est symetrique (graphe non oriente).
-     * @param g Graphe a parcourir (non null)
-     * @param centres Liste ordonnee des centres consideres, depart en premier (indice 0)
-     * @return Matrice n*n des durees de plus court chemin entre centres (n = taille de la liste)
-     */
-    public static double[][] calculerMatrice(Graph g, ArrayList<Node> centres) {
-       int n = centres.size();
-       double[][] matrice = new double[n][n];
-
-       for (int i = 0; i < n; i++) {
-           for (int j = i + 1; j < n; j++) {
-               Path p = plusCourtChemin(g, centres.get(i).getId(), centres.get(j).getId());
-               double duree;
-               if (p == null || p.empty()) {
-                   duree = Double.POSITIVE_INFINITY;
-               } else {
-                   duree = dureeChemin(p);
-               }
-               matrice[i][j] = duree;
-               matrice[j][i] = duree;
-           }
-       }
-       return matrice;
-   }
-
-
-    /**
      * Pre-calcule conjointement la matrice des durees de plus court chemin et les
      * Path GraphStream correspondants pour chaque paire de centres. La matrice sert
      * aux algorithmes d'optimisation (PPV, 2-opt) qui manipulent des sequences
@@ -376,7 +342,7 @@ public class Algo {
      * est le depart, {@code seq[seq.length - 1]} le dernier centre livre. Le sujet
      * ne contraint pas le centre d'arrivee : pas de retour au depart (chemin libre).
      * @param seq Ordre de visite des centres, indices dans la liste des centres
-     * @param durees Matrice des durees centre a centre (issue de {@link #calculerMatrice})
+     * @param durees Matrice des durees centre a centre (issue de {@link #calculerDonneesCentres})
      * @return Somme des durees des transitions seq[i] -&gt; seq[i+1], pour i de 0 a length-2
      */
     public static double dureeSequence(int[] seq, double[][] durees) {
@@ -399,7 +365,7 @@ public class Algo {
      * un point a livrer explicitement. La compensation se fait par l'optimisation
      * locale appliquee ensuite. La complexite est en O(n^2), tres rapide grace aux
      * lookups O(1) dans la matrice.
-     * @param durees Matrice n*n des durees centre a centre (issue de {@link #calculerMatrice})
+     * @param durees Matrice n*n des durees centre a centre (issue de {@link #calculerDonneesCentres})
      * @return Tableau d'indices de taille n donnant l'ordre de visite, seq[0] = 0 (depart)
      */
     public static int[] tourneeGloutonSequence(double[][] durees) {
@@ -455,7 +421,7 @@ public class Algo {
      * par commodite. Comme la tournee est un chemin libre (pas de retour au depart),
      * le cas {@code j == n - 1} est traite specifiquement : pas d'arrete a droite.
      * @param seq Sequence initiale (typiquement issue de {@link #tourneeGloutonSequence}), modifiee en place
-     * @param durees Matrice des durees centre a centre (issue de {@link #calculerMatrice})
+     * @param durees Matrice des durees centre a centre (issue de {@link #calculerDonneesCentres})
      * @return La sequence optimisee (meme reference que le parametre {@code seq})
      */
     public static int[] deuxOpt(int[] seq, double[][] durees) {
@@ -507,11 +473,10 @@ public class Algo {
 
         for (int i = 0; i < seq.length - 1; i++) {
             Path sousChemin = donnees.chemins[seq[i]][seq[i + 1]];
-            if (sousChemin == null) {}
-            else{
+            if (sousChemin != null) {
+            
                 for (Edge e : sousChemin.getEdgePath()) {
-                    resultat.add(e);
-                }
+                    resultat.add(e);                }
             }
         }
         return resultat;
@@ -605,6 +570,7 @@ public class Algo {
             indices.add(i);
         }
         indices.sort((a, b) -> Double.compare(donnees.durees[0][a], donnees.durees[0][b]));
+        // Ce tri ne sert qu'à fabriquer la distribution alternée juste après (un sur deux dans chaque groupe). C'est donc juste le point de départ de la partition, ensuite remanié par la boucle d'échanges.
 
         // 3. Distribution alternee en deux groupes
         ArrayList<Integer> groupe1 = new ArrayList<>();
